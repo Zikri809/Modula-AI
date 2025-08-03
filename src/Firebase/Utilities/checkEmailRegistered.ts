@@ -13,9 +13,12 @@ export default async function (email: string) : Promise<boolean>{
         else if (user_signIn_method.includes("password")){
             return true
         }
-        else{
+        else if(user_signIn_method.includes('google.com')) {
             toast.success('Already Sign up using google')
             return false
+        }
+        else{
+            return true
         }
     }
     catch(error: any){
