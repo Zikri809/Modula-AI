@@ -5,6 +5,7 @@ import { useState } from "react";
 import { LoginForm } from "@/components/login-form";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { Toaster } from "sonner";
 
 const Dither = dynamic(() => import('@/app/Components/ReactBits/Dither/Dither'), {
   ssr: false,
@@ -16,6 +17,7 @@ export default function login() {
 
   return (
    <div className="flex flex-col h-screen overflow-hidden bg-black">
+      <Toaster richColors position="top-right" className='z-100'/>
       <div className="" style={{ width: '100%', height: '100%', position: 'absolute' }}>
         <Dither
           waveColor={[0.5, 0.5, 0.5]}
