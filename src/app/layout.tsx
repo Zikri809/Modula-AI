@@ -1,6 +1,8 @@
+
 import type { Metadata } from "next";
 import "./globals.css";
 import { Poppins } from 'next/font/google'
+import Refresh_token_component from "./Components/SelfComponent/refresh_token/refresh_token_component";
 
 // Configure the font
 const poppins = Poppins({
@@ -21,10 +23,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
+
   return (
     <html lang="en" className={`${poppins.variable } bg-black`}>
       <body className={poppins.className}>
+        <Refresh_token_component>
         {children}
+        </Refresh_token_component>
       </body>
     </html>
   );
