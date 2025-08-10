@@ -1,7 +1,6 @@
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import textExtractor from "@/lib/formidable/parseFile";
 
 
 
@@ -24,26 +23,7 @@ export async function POST(request:NextRequest){
         const files = formData.getAll('file') as File[] ;
         const query = formData.get('query') as string | null;
 
-        
-        
-        
-        const extracted_text:string[] = await textExtractor(files)
-        query_out = query
-        extracted_file_string =extracted_text.length>0 ? extracted_text.join(' ') : null
-        /* files arr format
-        [
-            {
-              name: string;
-              size: number;
-              type: string;
-              arrayBuffer: () => Promise<ArrayBuffer>;
-              slice: (...) => Blob;
-              stream: () => ReadableStream;
-              text: () => Promise<string>;
-              // etc.
-            }
-        ]
-        */ 
+
         
     }
     catch(error){
@@ -69,3 +49,5 @@ export async function POST(request:NextRequest){
     }
         
 }
+
+//test localhost:3000/api/llm/kimi-k2
