@@ -1,6 +1,6 @@
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import { NextRequest, NextResponse } from "next/server";
-import { prompt_format, schema } from "@/system_prompts/prompst";
+import { prompt_format } from "@/system_prompts/prompst";
 
 //gemini layer
 import {GoogleGenAI,Part,File as File_2} from '@google/genai';
@@ -65,13 +65,16 @@ export async function POST(request:NextRequest){
 
     //file uploads block
     let uploaded_files:Part[] = []
-    for(const file of files){
-        const file_data = await file_upload(file)
-        if(!file_data) continue
-        uploaded_files.push({fileData:{
-            mimeType: file_data?.mimeType,
-            fileUri: file_data?.uri
-        }},)
+    if(files.length>0){
+      for(const file of files){
+          const file_data = await file_upload(file)
+          if(!file_data) continue
+          uploaded_files.push({fileData:{
+              mimeType: file_data?.mimeType,
+              fileUri: file_data?.uri
+          }},)
+      }
+
     }
 
     //construct the file part for the prompt to refernce it
@@ -100,8 +103,9 @@ export async function POST(request:NextRequest){
         
         });
         const json_response = JSON.parse(response.text ?? '')
-        let cleaned = json_response.mark_down_extracted_content.replace(/\n/g, "<br>")
+        let cleaned = json_response.mark_down_extracted_content 
         //cleaned = cleaned.replace(/\\\\/g, `\\`);
+        console.log('output is ',cleaned) //copy this into the renderer not the postman one since /n in postman to save space fro json
         return NextResponse.json({response: cleaned},{status:200})
     }catch(error){
       return  NextResponse.json({message: 'fail to get a response from gemini api', cause: String(error)},{status:500})
