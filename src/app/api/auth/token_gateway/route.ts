@@ -13,12 +13,14 @@ export async function POST(request: NextRequest){
         const uid = result.uid
         const payload = {
             uid: uid,
+            email: result.email,
             plan: 'free'
         }
         const jwt = await signJWT(payload)
         if(!jwt){
             return NextResponse.json({error: 'fail to generate the jwt token'}, {status:400})
         }
+
         let res = NextResponse.json({message:'success generating the token'},{status: 200,})
         res.cookies.set('api_token',jwt,{secure: true, httpOnly:true, path:'/',maxAge:3600, sameSite: "strict",})
         return res

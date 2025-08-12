@@ -21,6 +21,7 @@ export async function POST(request:NextRequest){
     const files = formData.getAll('file') as File[] ;
     const query = formData.get('query') as string | null; 
     let extracted_content:string | null = null
+    let confidence_level:number | null = null
     try{
       if(files.length>0) {
         const parseing = await fetch(`${process.env.DEV_ORIGIN ?? ''}/api/llm/gemini-2.0-flash?processer=true`,{
@@ -33,7 +34,8 @@ export async function POST(request:NextRequest){
         const parsejson = await parseing.json()
         console.log('content of parsejson is ',parsejson)
         //if(!parsejson.response.mark_down_extracted_content) return NextResponse.json({message:'failed to extract the content ', cause: 'no content',status:500})
-        extracted_content = parsejson.response
+        extracted_content = parsejson.response.mark_down_extracted_content
+        confidence_level = parsejson.response.confidence_level
       } //if no file submitted wont run
         
     }
@@ -64,8 +66,9 @@ export async function POST(request:NextRequest){
           //completion.choices[0].message.content = String(completion.choices[0].message.content)
         }
         console.log('output is ',completion.choices[0].message.content) //to test copy this and paste into website do not copy from postman because it contains \n needed to save space for json
-        return NextResponse.json({response: completion.choices[0].message.content},{status:200}) //the front end must parse the json string
-    }
+        return NextResponse.json({response: completion.choices[0].message.content, confidence_level: confidence_level},{status:200}) //the front end must parse the json string
+        //the front end should notify the user if the confidence level is below 75 percent ask thme to change model
+      }
     catch(error){
         return NextResponse.json({error: ' Problem with contacting the llm api ', cause: String(error)},{status:400})
     }

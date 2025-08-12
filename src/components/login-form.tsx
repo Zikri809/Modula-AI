@@ -20,6 +20,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Loader2Icon } from "lucide-react"
 import { EmailAuthProvider, linkWithCredential } from "firebase/auth"
+import refresh_token from "@/lib/refresh_token/refresh_token"
 
 
 
@@ -38,6 +39,20 @@ export function LoginForm({
   const [signInWithGoogle, google_user, google_loading, google_error] = useSignInWithGoogle(auth);
   const router = useRouter()
 
+
+  async function create_user(){
+    try{
+        const result = await fetch(`/api/user/create`,{
+            method: 'POST',
+        })
+        const result_json = await result.json()
+        return result_json
+    }
+    catch(error){
+        console.log(error)
+        return null
+    }
+}
   async function merge_account(email:string, password:string){
       const google_sign_in = await signInWithGoogle()
       const credential = EmailAuthProvider.credential(email, password);
@@ -65,6 +80,8 @@ export function LoginForm({
        toast.error('Oh oh! Something went wrong try again in few seconds '+google_error)
       }
       if(google_user){
+        refresh_token()
+        create_user()
         toast.success('Sign In successful redirecting ... ')
         setTimeout(() => {
             router.push('/')
@@ -74,6 +91,8 @@ export function LoginForm({
     
     useEffect(()=>{
       if(signup_user){
+        refresh_token()
+        create_user()
         toast.success('Sign up Successful redirecting ...')
         setTimeout(() => {
           router.push('/')

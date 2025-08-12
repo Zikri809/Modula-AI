@@ -6,11 +6,13 @@ if(!service_account_key){
     //console.log('there is not service account key provided')
     throw new Error('there is not service account key provided')
 }
+if (!admin.apps.length) {
 
-admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(service_account_key)),
-   
-})
+    admin.initializeApp({
+        credential: admin.credential.cert(JSON.parse(service_account_key)),
+       
+    })
+}
 
   
 export const auth = admin.auth()

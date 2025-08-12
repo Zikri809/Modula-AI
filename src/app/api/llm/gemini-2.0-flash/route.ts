@@ -4,6 +4,7 @@ import { prompt_format } from "@/system_prompts/prompst";
 
 //gemini layer
 import {GoogleGenAI,Part,File as File_2} from '@google/genai';
+import { json } from "stream/consumers";
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
 const gemini = new GoogleGenAI({apiKey: GEMINI_API_KEY});
@@ -106,7 +107,7 @@ export async function POST(request:NextRequest){
         let cleaned = json_response.mark_down_extracted_content 
         //cleaned = cleaned.replace(/\\\\/g, `\\`);
         console.log('output is ',cleaned) //copy this into the renderer not the postman one since /n in postman to save space fro json
-        return NextResponse.json({response: cleaned},{status:200})
+        return NextResponse.json({response: json_response},{status:200})
     }catch(error){
       return  NextResponse.json({message: 'fail to get a response from gemini api', cause: String(error)},{status:500})
     }
