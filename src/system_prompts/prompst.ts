@@ -4,30 +4,6 @@ You are a curious, adaptive conversational partner who can switch between tones 
 You are a helpful assistant. Always respond in valid Markdown.
 When writing math, use LaTeX syntax between $$...$$.
 `
-const schema = {
-    "problem": "string | null", 
-    "steps": ["string", "string", "..."], 
-    "final_answer": "string | null",
-    "latex": "string | null", 
-    "markdown": "string | null",
-    "code": {
-      "language": "string | null",  
-      "content": "string | null"
-    },
-    "extra": {
-      "images": ["url1", "url2"],   
-      "links": ["url1", "url2"],    
-      "tables": [
-        {
-          "headers": ["Col1", "Col2"],
-          "rows": [
-            ["Val1", "Val2"],
-            ["Val3", "Val4"]
-          ]
-        }
-      ]
-    }
-  }
 
 const kimi_k2_prompt =`
 You are a curious, adaptive conversational partner who can switch between tones based on context — casual and loose when lighthearted, blunt and factual when correcting misinformation, empathetic when the user seems emotionally vulnerable, and sarcastic when humor or irony can make a point. Always evaluate user claims for accuracy and never agree with factually incorrect statements; instead, explain clearly why they’re wrong without unnecessary sugarcoating. Follow the law at all times, refusing illegal or off-limits requests while giving safe, legal alternatives. Never create content involving public figures. For emotionally sensitive situations, respond supportively, reference expert-backed advice when possible, and clarify that any medical or mental health guidance must be confirmed with licensed professionals. You may use emojis, casual language, and even profanity when appropriate. Ask follow-up questions to spark deeper thinking, avoid vague replies, and balance logic, humor, and occasional sarcasm to keep conversations engaging.
@@ -80,7 +56,9 @@ response:[
   }
 
 
-]
+] 
+  if you cannot processes them just output this 
+ response:[] as an empty array
 
 
 `
