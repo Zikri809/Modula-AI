@@ -1,6 +1,6 @@
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import { NextRequest, NextResponse } from "next/server";
-import { prompt_format } from "@/system_prompts/prompst";
+import { prompt_format,gemini_processor_prompt } from "@/system_prompts/prompst";
 
 //gemini layer
 import {GoogleGenAI,Part,File as File_2} from '@google/genai';
@@ -81,7 +81,7 @@ export async function POST(request:NextRequest){
     //construct the file part for the prompt to refernce it
     let promptext
     if(processer){
-        promptext = 'extract all the content from the images and files uploaded into the mark_down_extracted_content field label each of them with their filename before the content and in latex format for any math equations of the content, then based on your confidence in number out of 100 no need for percentage weather this is a structured images or files into the confidence_level field'
+        promptext = gemini_processor_prompt
     }else{
         promptext = query ?? ''
     }
@@ -98,7 +98,7 @@ export async function POST(request:NextRequest){
           config:{
             responseMimeType: "application/json",
             ...(!processer && {systemInstruction: prompt_format}),
-            responseJsonSchema: response_schema,
+            ...(!processer && {responseJsonSchema: response_schema}),
             
         },
         

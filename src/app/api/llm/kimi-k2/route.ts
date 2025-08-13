@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { kimi_k2_prompt } from "@/system_prompts/prompst";
 
-
+type Extracted_obj = {
+  mark_down_extracted_content:  string,
+  confidence_level:  number,
+  file_name:  string
+}
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -20,7 +24,7 @@ export async function POST(request:NextRequest){
     const formData = await request.formData();
     const files = formData.getAll('file') as File[] ;
     const query = formData.get('query') as string | null; 
-    let extracted_content:string | null = null
+    let extracted_content_obj_arr:Extracted_obj[] | null = null
     let confidence_level:number | null = null
     try{
       if(files.length>0) {
@@ -34,17 +38,25 @@ export async function POST(request:NextRequest){
         const parsejson = await parseing.json()
         console.log('content of parsejson is ',parsejson)
         //if(!parsejson.response.mark_down_extracted_content) return NextResponse.json({message:'failed to extract the content ', cause: 'no content',status:500})
-        extracted_content = parsejson.response.mark_down_extracted_content
-        confidence_level = parsejson.response.confidence_level
+        extracted_content_obj_arr = parsejson.response 
+        if(extracted_content_obj_arr){
+          let sum =0
+          for(const element of extracted_content_obj_arr){
+            sum+=element.confidence_level 
+          }
+          confidence_level = sum / extracted_content_obj_arr.length
+        }
+        
       } //if no file submitted wont run
         
     }
     catch(error){
         return NextResponse.json({error: 'fail to parse request', cause: String(error)},{status: 400})
     }
-    if(!query && !extracted_content) return NextResponse.json({error:'Please include file or text in the request'},{status:400})
-    try{
-        console.log('extracted content is ',extracted_content)
+    if(!query && !extracted_content_obj_arr) return NextResponse.json({error:'Please include file or text in the request'},{status:400})
+    
+      try{
+        console.log('extracted content is ',extracted_content_obj_arr)
         const completion = await openai.chat.completions.create({
         model: "moonshotai/kimi-k2:free",
         messages: [
@@ -54,7 +66,7 @@ export async function POST(request:NextRequest){
           },
           {
             "role": "user",
-            "content": `${extracted_content!=null ? extracted_content : ""} \n${query}`
+            "content": `${extracted_content_obj_arr!=null ? JSON.stringify(extracted_content_obj_arr) : ""} \n${query}`
           }
         ],
         temperature: 0
