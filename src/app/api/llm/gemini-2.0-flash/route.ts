@@ -1,13 +1,13 @@
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import {NextRequest, NextResponse} from "next/server";
-import {gemini_processor_prompt, prompt_format,gemini_response_format} from "@/system_prompts/prompst";
+import {gemini_processor_prompt, gemini_response_format, prompt_format} from "@/system_prompts/prompst";
 
 //gemini layer
 import {File as File_2, GoogleGenAI, Part} from '@google/genai';
 
+
 const GEMINI_API_KEY = process.env.GEMINI_API;
 const gemini = new GoogleGenAI({apiKey: GEMINI_API_KEY});
-
 
 
 async function file_upload(file: File,): Promise<File_2 | null> {
@@ -32,11 +32,13 @@ export async function POST(request: NextRequest) {
     //get the params if processor then file processing task
     const url = new URL(request.url)
     const processer = url.searchParams.get('processer') === 'true'
+    const session_id = url.searchParams.get('session_id')
     //auth layer
     const api_token = request.cookies.get('api_token')?.value
     if (!api_token) return NextResponse.json({error: 'No token present in the request'}, {status: 400})
     const JWT_token_payload = await verifyJWT(api_token)
     if (!JWT_token_payload) return NextResponse.json({error: 'invalid token possibly expired'}, {status: 400})
+    const {uid} = JWT_token_payload
 
     const formData = await request.formData();
     const files = formData.getAll('file') as File[];
@@ -85,9 +87,11 @@ export async function POST(request: NextRequest) {
         });
         const json_response = JSON.parse(response.text ?? '')
         let cleaned = json_response.response
-        //cleaned = cleaned.replace(/\\\\/g, `\\`);
         console.log('output is ', cleaned) //copy this into the renderer not the postman one since /n in postman to save space fro json
+
+
         return NextResponse.json({response: json_response}, {status: 200})
+
     } catch (error) {
         return NextResponse.json({
             message: 'fail to get a response from gemini api',

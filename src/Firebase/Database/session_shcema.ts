@@ -1,11 +1,10 @@
 import {Part} from "@google/genai";
 
 interface FileMetaDataFile {
-    storageRef: string;
     original_name: string;
     size: number;
     file_type: string;
-    extracted_text_ref: string;
+    extracted_text: string;
     confidence_level: number;
 }
 
@@ -15,7 +14,6 @@ interface GeminiMetaData {
 }
 
 interface UploadedFile {
-    storageRef: string;
     original_name: string;
     file_type: string;
 }
@@ -28,7 +26,7 @@ interface Conversation {
     llm_model: string;
     total_tokens: number;
     prompt_tokens: number;
-    completion_tokens: number;
+    response_tokens: number;
     cost: number;
 }
 
@@ -43,7 +41,7 @@ interface SessionSchema {
     modifiedAt: string; // ISO Date string
     file_meta_data: FileMetaData;
     GeminiMetaData: GeminiMetaData //this helps us to use the existing file uploaded to gemini as part of context on subsequent request with 48h of upload
-    conversations: Conversation[];
+    conversations: [];
 }
 
 

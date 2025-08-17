@@ -1,29 +1,31 @@
 import {NextRequest, NextResponse} from "next/server";
-import {db} from "@/Firebase/firebase-admin/firebase_admin";
+import {Prisma} from "@prisma/client";
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import {JWTPayload} from "jose";
 import {z} from 'zod'
+import {prismaClient} from "@/lib/prisma/prisma";
 
 const User_sessions = z.object({
     title: z.string(),
     sessionId: z.string()
 })
 const Update_schema = z.object({
-    uid: z.string().optional(),            // Unique user ID, e.g. "lBxhvTkDUXMsX3eHoA1Zi9mdHqU2"
-    plan: z.enum(['free', 'paid', 'dev']).optional(),
+    plan: z.enum(['free', 'paid']).optional(),
     email: z.string().email().optional(),          // e.g. "free", "premium", etc.
-    sessionIDs: z.array(User_sessions).optional(),  // Array of session document IDs (unique strings)
     user_details: z.array(z.string()).optional(),
-    token_remain: z.number().int().min(0).optional(), // Remaining tokens for the user, e.g. 5000
+    credit_remain: z.number().int().min(0).optional(), // Remaining tokens for the user, e.g. 5000
     free_upload: z.number().int().min(0).optional()
 })
-
+//note array updates needs to be revisited since this approach overwirte with new array instead of add
 
 export async function PATCH(request: NextRequest) {
     //middleware already check the existance of the api_token no need for discrete checks
+    const url = new URL(request.url);
+    const user_details_operation = url.searchParams.get("user_details_operation");
+
     const api_token: string = request.cookies.get('api_token')?.value as string
     const payload = await verifyJWT(api_token) as JWTPayload
-    const {uid} = payload
+    const {uid} = payload as JWTPayload
     const json_result = await request.json()
     //check to match the schema defined no allowing random properties
     const parsed_result = Update_schema.strict().safeParse(json_result)
@@ -31,20 +33,41 @@ export async function PATCH(request: NextRequest) {
         messsage: 'Body schema mismatched from the spec',
         error: parsed_result.error.flatten()
     }, {status: 400})
-    const body = parsed_result.data
+    const {plan, email,credit_remain, free_upload, user_details} = parsed_result.data
     //connect to collection
-    const docRef = db.collection('user').doc(uid as string)
-
-    try {
-        await docRef.update(body)
-
-        return NextResponse.json({messsage: 'successfully update the user document '}, {status: 200})
-    } catch (error) {
-        console.error('an error occured updating user data ', error)
-        return NextResponse.json({
-            message: 'An error occured updating the user document ',
-            error: String(error)
-        }, {status: 500})
+    const prisma_update = {} as Prisma.usersUpdateInput
+    if(plan) prisma_update.plan = plan
+    if(email) prisma_update.email = email
+    if(credit_remain) prisma_update.credit_remain = credit_remain
+    if(free_upload) prisma_update.free_upload_remain = free_upload
+    if(user_details && user_details_operation == 'add') prisma_update.user_details = {push: [...user_details]}
+    if(user_details && user_details_operation == 'remove') {
+        //fetch the original array in db then remove the element then overwrite back
+        const result = await prismaClient.users.findUnique({
+            where: {
+                uid: uid as string,
+            }
+        })
+        if(!result ) return NextResponse.json({message:'failed to update user details, removing operation', cause: "fail to read original array "},{status:500})
+        const original_arr = result.user_details ?? []
+        for(const element of user_details) {
+            if(original_arr.includes(element)){
+                const  index_to_remove = original_arr.indexOf(element)
+                original_arr.splice(index_to_remove, 1)
+            }
+        }
+        prisma_update.user_details = original_arr
+    }
+    try{
+        await prismaClient.users.update({
+            where: {uid: uid as string},
+            data: prisma_update,
+        })
+        return NextResponse.json({message: 'field updated successfully.'}, {status: 200})
+    }
+    catch(error){
+        console.log(error)
+        return NextResponse.json({message: "failed to update user row ", uid_affected: uid , cause:String(error)},{status:500})
     }
 }
 

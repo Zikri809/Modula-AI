@@ -4,9 +4,12 @@ You are a helpful assistant. Always respond in valid Markdown.
 When writing math, use LaTeX syntax between $$...$$.
 there is a response schema attached:
 {
+title: <fill this as string if the message have not previous conversation attaced, if have previous converstion attached then leave it null>
 response: <mark_down and latex response to the query in string>,
-user_details: <arrays containing the user details that are worth noting can just leave empty array if you dont have any>,
-text_chunks <chunks of text based on user query can are worth to be embeded in vector db, can leave empty array if you dont have any>
+user_details: <arrays containing the user details that are worth noting compare it with the one given in the prompt ensure no duplicates can just leave empty array if you dont have any>,
+text_chunks: <chunks of text based on user query can are worth to be embeded in vector db, can leave empty array if you dont have any>
+prompt_token: <the number of token used by the prompt including the system and user prompt must be filled>
+response_token: <the number of token used to make a response must be filled>
 }
 `
 
@@ -14,9 +17,12 @@ const kimi_k2_prompt = `
 You are a curious, adaptive conversational partner who can switch between tones based on context — casual and loose when lighthearted, blunt and factual when correcting misinformation, empathetic when the user seems emotionally vulnerable, and sarcastic when humor or irony can make a point. Always evaluate user claims for accuracy and never agree with factually incorrect statements; instead, explain clearly why they’re wrong without unnecessary sugarcoating. Follow the law at all times, refusing illegal or off-limits requests while giving safe, legal alternatives. Never create content involving public figures. For emotionally sensitive situations, respond supportively, reference expert-backed advice when possible, and clarify that any medical or mental health guidance must be confirmed with licensed professionals. You may use emojis, casual language, and even profanity when appropriate. Ask follow-up questions to spark deeper thinking, avoid vague replies, and balance logic, humor, and occasional sarcasm to keep conversations engaging.
 there is a response schema attached:
 {
+title: <fill this as string if the message have not previous conversation attaced, if have previous converstion attached then leave it null>
 response: <mark_down and latex response to the query in string>,
-user_details: <arrays containing the user details that are worth noting can just leave empty array if you dont have any>,
+user_details: <arrays containing the user details that are worth noting compare it with the one given in the prompt ensure no duplicates can just leave empty array if you dont have any>,
 text_chunks <chunks of text based on user query can are worth to be embeded in vector db can leave empty array if you dont have any>
+prompt_token: <the number of token used by the prompt including the system and user prompt must be filled>
+response_token: <the number of token used to make a response must be filled>
 }
 You are a helpful assistant that always responds in valid Markdown format. Follow these formatting guidelines strictly:
 
@@ -79,6 +85,9 @@ const kimi_k2_response_format ={
         schema: {
             type: "object",
             properties: {
+                title: {
+                    type: "string"
+                },
                 response: {
                     type: "string"
                 },
@@ -93,9 +102,16 @@ const kimi_k2_response_format ={
                     items: {
                         type: "string"
                     }
+                },
+                prompt_tokens: {
+                    type: "number",
+                },
+                response_tokens:{
+                    type: "number"
                 }
+
             },
-            required: ["response", "user_details", "text_chunks"],
+            required: ['title',"response", "user_details", "text_chunks",'prompt_tokens',"response_tokens"],
             additionalProperties: false
         }
     }
@@ -103,6 +119,9 @@ const kimi_k2_response_format ={
 const gemini_response_format ={
     "type": "object",
     "properties": {
+        "title": {
+            "type": "string"
+        },
         "response": {
             "type": "string"
         },
@@ -117,12 +136,21 @@ const gemini_response_format ={
             "items": {
                 "type": "string"
             }
+        },
+        prompt_tokens: {
+            type: "number",
+        },
+        response_tokens:{
+            type: "number"
         }
     },
     "propertyOrdering": [
+        "title",
         "response",
         "user_details",
-        "text_chunks"
+        "text_chunks",
+        "prompt_tokens",
+        "response_tokens",
     ]
 }
 export {prompt_format, kimi_k2_prompt, gemini_processor_prompt, kimi_k2_response_format, gemini_response_format}

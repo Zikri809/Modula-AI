@@ -1,7 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
-import {db} from "@/Firebase/firebase-admin/firebase_admin";
+import {prismaClient} from "@/lib/prisma/prisma";
 import verifyJWT from "@/lib/jwt/verifyJWT";
-import {UserSchema} from "@/Firebase/Database/user_schema";
 
 
 export async function POST(request: NextRequest) {
@@ -19,36 +18,31 @@ export async function POST(request: NextRequest) {
     }, {status: 400})
 
     const {uid, email} = JWT_token_payload
-    const user: UserSchema = {
-        uid: uid as string,
-        email: email as string,
-        plan: 'free',
-        sessionIDs: [],
-        user_details: [],
-        token_remain: 0,
-        free_upload: 3
+    //check if the user already created
+    const exist = await prismaClient.users.findUnique({where: {uid:uid as string}})
+    if(exist) return NextResponse.json({message: 'User already exists'},{status:200})
+
+    try{
+        const db_result = await prismaClient.users.create({
+            data: {
+                uid: uid as string,
+                email: email as string,
+                created_at: new Date(),
+                credit_remain: 0,
+                plan: 'free',
+                free_upload_remain: 3,
+                user_details: [],
+
+            }
+        })
+        return NextResponse.json({message:'successfully created the user',},{status:200})
 
     }
-    try {
-        let collection = db.collection('user')
-        if (!collection) {
-            console.log('collection is missing')
-        }
-        //check if it exist 
-        const user_existed = await collection.doc(uid as string).get()
-        if (user_existed.exists) return NextResponse.json({message: ' user already created'}, {status: 200})
-        //if not create a user
-        const create_user = await collection.doc(uid as string).create(user)
-        return NextResponse.json({message: 'succefully created new user'}, {status: 200})
-
-    } catch (error) {
-        console.log('error occured creating new user ', String(error))
-        return NextResponse.json({
-            messsage: ' fail to create user ',
-            cause: String(error),
-            path: '/api/user/create/route.ts'
-        }, {status: 400})
+    catch(error){
+        console.log(error)
+        return NextResponse.json({message:'error creating user', cause:String(error)},{status:500})
     }
+
 }
 
 /*
