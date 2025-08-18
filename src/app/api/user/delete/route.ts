@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
-import {prismaClient} from "@/lib/prisma/prisma";
+import {delete_user} from "@/lib/supabase_helper/user/delete_user";
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import {JWTPayload} from "jose";
 
@@ -9,11 +9,7 @@ export async function DELETE(request: NextRequest) {
     const payload = await verifyJWT(api_token) as JWTPayload
     const {uid} = payload
     try {
-        await prismaClient.users.delete({
-            where: {
-                uid: uid as string,
-            }
-        })
+        const db_truth = await delete_user(uid as string);
         return NextResponse.json({message: "successfully deleted user row "}, {status: 200})
     } catch (error) {
         console.error('Error occured during deleting the user docs', error)

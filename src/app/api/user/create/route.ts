@@ -1,7 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
-import {prismaClient} from "@/lib/prisma/prisma";
 import verifyJWT from "@/lib/jwt/verifyJWT";
-
+import create_user from "@/lib/supabase_helper/user/create_user";
 
 export async function POST(request: NextRequest) {
     //we verify the request by the cookies 
@@ -19,24 +18,10 @@ export async function POST(request: NextRequest) {
 
     const {uid, email} = JWT_token_payload
     //check if the user already created
-    const exist = await prismaClient.users.findUnique({where: {uid:uid as string}})
-    if(exist) return NextResponse.json({message: 'User already exists'},{status:200})
-
     try{
-        const db_result = await prismaClient.users.create({
-            data: {
-                uid: uid as string,
-                email: email as string,
-                created_at: new Date(),
-                credit_remain: 0,
-                plan: 'free',
-                free_upload_remain: 3,
-                user_details: [],
-
-            }
-        })
-        return NextResponse.json({message:'successfully created the user',},{status:200})
-
+        const db = await create_user(uid as string, email as string)
+        if(db) return NextResponse.json({message:'successfully created user'},{status:200})
+        throw new Error("db does not exist")
     }
     catch(error){
         console.log(error)

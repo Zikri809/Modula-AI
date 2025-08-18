@@ -1,9 +1,12 @@
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import {NextRequest, NextResponse} from "next/server";
 import {gemini_processor_prompt, gemini_response_format, prompt_format} from "@/system_prompts/prompst";
+import create_message from "@/lib/supabase_helper/message/create_message";
+import updateChat from "@/lib/supabase_helper/chat/update_chat";
 
 //gemini layer
 import {File as File_2, GoogleGenAI, Part} from '@google/genai';
+import update_user from "@/lib/supabase_helper/user/update_user";
 
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
@@ -32,7 +35,8 @@ export async function POST(request: NextRequest) {
     //get the params if processor then file processing task
     const url = new URL(request.url)
     const processer = url.searchParams.get('processer') === 'true'
-    const session_id = url.searchParams.get('session_id')
+    const chat_id = url.searchParams.get('chat_id')
+    if(!chat_id) return NextResponse.json({message: 'missing chat_id in the params '},{status:400})
     //auth layer
     const api_token = request.cookies.get('api_token')?.value
     if (!api_token) return NextResponse.json({error: 'No token present in the request'}, {status: 400})
@@ -89,6 +93,28 @@ export async function POST(request: NextRequest) {
         let cleaned = json_response.response
         console.log('output is ', cleaned) //copy this into the renderer not the postman one since /n in postman to save space fro json
 
+        //updating the user details of user
+        if(json_response.user_details.length>0) {
+            const db_user = await update_user(uid as string, {user_details:json_response.user_details} , 'add')
+        }
+
+        //updating title for the chat
+        if(json_response.title){
+            const db_chat_ = await updateChat(chat_id, json_response.title)
+        }
+
+        //create new message
+        const total_cost = (json_response.prompt_tokens/1000000 * 0.1)  + (json_response.response_tokens/1000000 * 0.4)
+        const db_create_message = await create_message(
+            uid as string,
+            chat_id,
+            JSON.stringify(promptext),
+            JSON.stringify(json_response.response),
+            json_response.prompt_tokens,
+            json_response.response_tokens,
+            total_cost,
+            'gemini-2.0-flash-001'
+        )
 
         return NextResponse.json({response: json_response}, {status: 200})
 
