@@ -6,7 +6,7 @@ there is a response schema attached:
 {
 title: <fill this as string if the message have not previous conversation attaced, if have previous converstion attached then leave it null>
 response: <mark_down and latex response to the query in string>,
-user_details: <arrays containing the user details that are worth noting compare it with the one given in the prompt ensure no duplicates can just leave empty array if you dont have any>,
+user_details: <arrays containing the user details that are worth noting and unique compare it to the one given in the <user_details>contains user details</user_details>  ensure no duplicates can just leave empty array if you dont have any>,
 text_chunks: <chunks of text based on user query can are worth to be embeded in vector db, can leave empty array if you dont have any>
 prompt_token: <the number of token used by the prompt including the system and user prompt must be filled>
 response_token: <the number of token used to make a response must be filled>

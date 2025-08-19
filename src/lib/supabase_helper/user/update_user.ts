@@ -39,7 +39,7 @@ export default async function update_user(uid:string , request_body:any, user_de
                 }
             }
             //overwrite the element to add or remove arr with new arr combined from original and modified
-            data.user_details = read_data?.user_details
+            data.user_details = Array.from(new Set(read_data?.user_details as string[]))
         }
         //add to db
         const {data:update_data, error:update_error } = await supabase.from('users').update(data).eq('uid', uid).single()

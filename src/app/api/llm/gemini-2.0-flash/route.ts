@@ -7,6 +7,7 @@ import updateChat from "@/lib/supabase_helper/chat/update_chat";
 //gemini layer
 import {File as File_2, GoogleGenAI, Part} from '@google/genai';
 import update_user from "@/lib/supabase_helper/user/update_user";
+import prompt_builder from "@/lib/prompt_builder/prompt_builder";
 
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
@@ -72,12 +73,14 @@ export async function POST(request: NextRequest) {
         promptext = query ?? ''
     }
 
-    const contentBlock: Part[] = [{text: promptext}, ...uploaded_files]
+
+
 
     //response block
     try {
+        const past_context = await prompt_builder(chat_id,uid as string)
 
-
+        const contentBlock: Part[] = [{text: (processer? promptext:`${past_context} <query> ${promptext} </query>`)}, ...uploaded_files]
         const response = await gemini.models.generateContent({
             model: 'gemini-2.0-flash-001',
             contents: [{role: "user", parts: contentBlock}],
