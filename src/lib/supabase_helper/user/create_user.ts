@@ -12,7 +12,6 @@ export default async function create_user(uid:string, email:string)  {
             .insert([{
                 uid: uid,
                 email: email,
-                created_at: new Date(),
                 credit_remain: 0,
                 plan: 'free',
                 free_upload_remain: 3,

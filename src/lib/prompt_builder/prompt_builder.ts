@@ -5,7 +5,7 @@ export default async function prompt_builder(chat_id:string , uid:string) {
     const supabse = await createClient()
     try{
         const {data:message_data, error:message_error} = await supabse.from('messages')
-            .select('user_prompt,llm_response,total_tokens').eq('chat_id', chat_id).order('created_at',{ascending:false})
+            .select('user_prompt,llm_response,total_tokens').eq('chat_id', chat_id).order('created_at',{ascending:true})
         if(message_error) throw message_error;
         //read user details for memory
         const {data:user_data, error:user_error} = await supabse.from('users').select('user_details').eq('uid',uid).single()
