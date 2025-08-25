@@ -3,17 +3,17 @@ import {NextRequest, NextResponse} from "next/server";
 import {gemini_processor_prompt, gemini_response_format, prompt_format} from "@/system_prompts/prompst";
 import create_message from "@/lib/supabase_helper/message/create_message";
 import updateChat from "@/lib/supabase_helper/chat/update_chat";
+import create_file_metadata from "@/lib/supabase_helper/file meta data/create_file_metadata";
 
 
 //gemini layer
 import {File as File_2, GoogleGenAI, Part} from '@google/genai';
 import update_user from "@/lib/supabase_helper/user/update_user";
 import prompt_builder from "@/lib/prompt_builder/prompt_builder";
-import {file} from "zod/v4";
 import file_retrievial_gemini from "@/lib/prompt_builder/file_retrievial_gemini";
-import create_server_upload from "@/lib/supabase_helper/llm_server_upload/create_server_upload";
-import create_chat from "@/lib/supabase_helper/chat/create_chat";
-import create_file_metadata from "@/lib/supabase_helper/file meta data/create_file_metadata";
+import {JWTPayload} from "jose";
+import upload_to_storage from "@/Firebase/Utilities/upload_to_storage";
+
 
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
@@ -45,10 +45,8 @@ export async function POST(request: NextRequest) {
     const chat_id = url.searchParams.get('chat_id')
     if(!chat_id) return NextResponse.json({message: 'missing chat_id in the params '},{status:400})
     //auth layer
-    const api_token = request.cookies.get('api_token')?.value
-    if (!api_token) return NextResponse.json({error: 'No token present in the request'}, {status: 400})
-    const JWT_token_payload = await verifyJWT(api_token)
-    if (!JWT_token_payload) return NextResponse.json({error: 'invalid token possibly expired'}, {status: 400})
+    const api_token = request.cookies.get('api_token')?.value as string
+    const JWT_token_payload = await verifyJWT(api_token ) as JWTPayload
     const {uid} = JWT_token_payload
 
     const formData = await request.formData();
@@ -56,40 +54,18 @@ export async function POST(request: NextRequest) {
     const query = formData.get('query') as string | null;
 
     //file uploads block
-    let uploaded_files: Part[] = []
-    let file_meta_data:{file_name:string , file_size:number}[] =[]
-    if (files.length > 0) {
-        for (const file of files) {
-            const file_data = await file_upload(file)
-            if (!file_data) continue
-            uploaded_files.push({
-                fileData: {
-                    mimeType: file_data?.mimeType,
-                    fileUri: file_data?.uri
-                }
-            },)
-            file_meta_data.push({file_name:file.name , file_size:file.size})
-        }
-
-    }
-
-    //construct the file part for the prompt to refernce it
-    let promptext
-    if (processer) {
-        promptext = gemini_processor_prompt
-    } else {
-        promptext = query ?? ''
-    }
+    const {uploaded_files,file_meta_data} = await  upload_all_file(files,uid as string)
 
     //response block
     try {
         let retrieved_uri: Part[] = []
+        let past_context = ''
         if(!processer){
             retrieved_uri = await file_retrievial_gemini(chat_id,'gemini-2.0-flash-001')
+            past_context = await prompt_builder(chat_id,uid as string)
         }
-        const past_context = await prompt_builder(chat_id,uid as string)
 
-        const contentBlock: Part[] = [{text: (processer? promptext:`${past_context} <user_query> ${promptext} </user_query>`)}, ...[...uploaded_files,...retrieved_uri]]
+        const contentBlock: Part[] = [{text: (processer? gemini_processor_prompt:`${past_context} <user_query> ${query ?? ''} </user_query>`)}, ...[...uploaded_files,...retrieved_uri]]
         const response = await gemini.models.generateContent({
             model: 'gemini-2.0-flash-001',
             contents: [{role: "user", parts: contentBlock}],
@@ -102,36 +78,19 @@ export async function POST(request: NextRequest) {
 
         });
         const json_response = JSON.parse(response.text ?? '')
-        let cleaned = json_response.response
-        console.log('output is ', cleaned) //copy this into the renderer not the postman one since /n in postman to save space fro json
+        console.log('output is ', json_response.response) //copy this into the renderer not the postman one since /n in postman to save space fro json
+
         if(!processer){
-
-            //updating the user details of user
-            if(json_response.user_details.length>0) {
-                const db_user = await update_user(uid as string, {user_details:json_response.user_details} , 'add')
-            }
-
-            //updating title for the chat
-            if(json_response.title){
-                const db_chat_ = await updateChat(chat_id, json_response.title)
-            }
-
-            //create new message
-            const total_cost = (json_response.prompt_tokens/1000000 * 0.1)  + (json_response.response_tokens/1000000 * 0.4)
-            const db_create_message = await create_message(
+            await db_updates(
+                json_response,
+                `${past_context} <user_query> ${query ?? ''} </user_query> ${prompt_format}`,
                 uid as string,
                 chat_id,
-                JSON.stringify(promptext),
-                JSON.stringify(json_response.response),
-                response.usageMetadata?.promptTokenCount as number,
-                response.usageMetadata?.candidatesTokenCount as number,
-                total_cost,
-                'gemini-2.0-flash-001'
+                response,
+                query,
+                file_meta_data,
             )
-            await create_file_metadata(chat_id,db_create_message,file_meta_data)
-            const db_upload = await create_server_upload(chat_id, uploaded_files,48,'gemini-2.0-flash-001')
         }
-
 
         return NextResponse.json({response: json_response}, {status: 200})
 
@@ -144,6 +103,80 @@ export async function POST(request: NextRequest) {
     }
 }
 
+
+async function upload_all_file(files: File[],uid:string) {
+    let uploaded_files: Part[] = []
+    let file_meta_data:{file_name:string , file_size:number,storage_ref:string, gemini_uri_part:{fileData:{mimeType:string,fileUri:string}}}[] =[]
+
+    for (const file of files) {
+        const file_data = await file_upload(file)
+        if (!file_data) continue
+        const storage_ref = await upload_to_storage(file,uid)
+        uploaded_files.push({
+            fileData: {
+                mimeType: file_data?.mimeType,
+                fileUri: file_data?.uri
+            }})
+        file_meta_data.push({
+            file_name:file.name ,
+            file_size:file.size,
+            storage_ref: storage_ref,
+            gemini_uri_part:{
+                fileData: {
+                    mimeType: file_data?.mimeType as string,
+                    fileUri: file_data?.uri as string
+                }
+            }
+        })
+    }
+
+    return {
+        uploaded_files: uploaded_files,
+        file_meta_data: file_meta_data,
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+async function db_updates(json_response:any, text_prompt:string,uid :string, chat_id:string , response:any, query:string | null , file_meta_data:any) {
+    try{
+        //required
+        if(!json_response.title || !(typeof json_response.title == "string")) throw new Error("Invalid Data for db update")
+        //updating the user details of user optional
+        if(Array.isArray(json_response.user_details) && (json_response.user_details.length>0) ){
+            await update_user(uid as string, {user_details:json_response.user_details} , 'add')
+        }
+        //updating title for the chat
+        await updateChat(chat_id, json_response.title)
+
+        //calculate the text_prompt_token
+        const token_response = await gemini.models.countTokens({
+            model: 'gemini-2.0-flash',
+            contents: text_prompt
+        })
+        const text_prompt_token = token_response.totalTokens ?token_response.totalTokens : 0
+        //create new message
+        const total_cost = (response.usageMetadata?.promptTokenCount as number/1000000 * 0.1)  + (response.usageMetadata?.candidatesTokenCount as number/1000000 * 0.4)
+        const db_create_message = await create_message(
+            uid as string,
+            chat_id,
+            JSON.stringify(query ?? ''),
+            JSON.stringify(json_response.response),
+            text_prompt_token,
+            (response.usageMetadata?.promptTokenCount as number - text_prompt_token),
+            response.usageMetadata?.candidatesTokenCount as number,
+            total_cost,
+            'gemini-2.0-flash-001'
+        )
+        //optional
+        if(file_meta_data.length>0){
+            await create_file_metadata(chat_id,db_create_message,file_meta_data)
+        }
+    }
+    catch(error){
+        throw error
+    }
+
+}
 /*
 testing
 

@@ -7,6 +7,12 @@ const params_schema = z.object({
     extracted_text: z.string().optional(),
     confidence_level: z.number().nonnegative().min(0,'value of the confidence level must be >= 0').optional(),
     storage_ref: z.string().optional(),
+    gemini_uri_part: z.object({
+        fileData: z.object({
+            mimeType: z.string(),
+            fileUri: z.string(),
+        })
+    }).optional()
 })
 const array_schema = z.array(params_schema)
 //message_id in the db is in int8 but since it's big the db will send in string, and we can send back in string
@@ -21,6 +27,7 @@ export default async function (chat_id:string, message_id:string, insert_params:
             ...element,
             chat_id: chat_id,
             message_id: message_id,
+            gemini_expiration_time: new Date(Date.now()+48*3600*1000).toISOString(),
         }
     })
     try{
