@@ -6,17 +6,10 @@ You must not mention or use them unless the user explicitly asks
 about files or their contents in the current message.
 If the user does not mention them, act as if the files do not exist.
 Violation = incorrect response.
+ALWAYS prevent response in json like text,
+responds only in pure form of text
 You are a helpful assistant. Always respond in valid Markdown.
 When writing math, use LaTeX syntax between $$...$$.
-there is a response schema attached:
-{
-title: <fill this as string if the message have not previous conversation attaced, if have previous converstion attached then leave it null>
-response: <mark_down and latex response to the query in string>,
-user_details: <arrays containing the user details that are worth noting and unique compare it to the one given in the <user_details>contains user details</user_details>  ensure no duplicates can just leave empty array if you dont have any>,
-text_chunks: <chunks of text based on user query can are worth to be embeded in vector db, can leave empty array if you dont have any>
-prompt_token: <the number of token used by the prompt including all that was provided, this must be filled>
-response_token: <the number of token used to make a response must be filled>
-}
 `
 
 const kimi_k2_prompt = `
@@ -122,13 +115,18 @@ const kimi_k2_response_format ={
         }
     }
 }
-const gemini_response_format ={
+const gemini_memory_system_prompt = `
+based on the text on the input returned a structured json like this 
+{
+title: <fill this as string based on the prompt you think is suitable>
+user_details: <arrays containing the user details that are worth noting and unique that are also not present in <user_details>....</user_details> that you can find from the conversation by scanning the whole conversation from beginning to the end Pay attention to context at the end as much as the beginning., can just leave empty array if you dont have any>,
+}
+
+`
+const gemini_memory_response_format ={
     "type": "object",
     "properties": {
         "title": {
-            "type": "string"
-        },
-        "response": {
             "type": "string"
         },
         "user_details": {
@@ -137,26 +135,10 @@ const gemini_response_format ={
                 "type": "string"
             }
         },
-        "text_chunks": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "prompt_tokens": {
-            type: "number",
-        },
-        "response_tokens":{
-            type: "number"
-        }
     },
     "propertyOrdering": [
         "title",
-        "response",
         "user_details",
-        "text_chunks",
-        "prompt_tokens",
-        "response_tokens",
     ]
 }
-export {prompt_format, kimi_k2_prompt, gemini_processor_prompt, kimi_k2_response_format, gemini_response_format}
+export {prompt_format, kimi_k2_prompt, gemini_processor_prompt, kimi_k2_response_format, gemini_memory_response_format,gemini_memory_system_prompt}

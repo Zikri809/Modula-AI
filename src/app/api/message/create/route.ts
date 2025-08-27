@@ -1,4 +1,4 @@
-import {NextRequest, NextResponse} from "next/server";
+/*import {NextRequest, NextResponse} from "next/server";
 import create_message from "@/lib/supabase_helper/message/create_message";
 import * as z from "zod";
 import verifyJWT from "@/lib/jwt/verifyJWT";
@@ -45,3 +45,4 @@ export async function POST(request:NextRequest){
         return NextResponse.json({message: 'error occurred', cause: err}, {status:500})
     }
 }
+*/

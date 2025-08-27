@@ -1,18 +1,20 @@
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import {NextRequest, NextResponse} from "next/server";
-import {gemini_processor_prompt, gemini_response_format, prompt_format} from "@/system_prompts/prompst";
+import {gemini_processor_prompt,  prompt_format} from "@/system_prompts/prompst";
 import create_message from "@/lib/supabase_helper/message/create_message";
 import updateChat from "@/lib/supabase_helper/chat/update_chat";
 import create_file_metadata from "@/lib/supabase_helper/file meta data/create_file_metadata";
 
 
 //gemini layer
-import {File as File_2, GoogleGenAI, Part} from '@google/genai';
+import {File as File_2, GenerateContentResponse, GoogleGenAI, Part} from '@google/genai';
 import update_user from "@/lib/supabase_helper/user/update_user";
 import prompt_builder from "@/lib/prompt_builder/prompt_builder";
 import file_retrievial_gemini from "@/lib/prompt_builder/file_retrievial_gemini";
 import {JWTPayload} from "jose";
 import upload_to_storage from "@/Firebase/Utilities/upload_to_storage";
+import memory_extractor from "@/lib/llm_based_processing/memory_extractor";
+import citation_builder from "@/lib/citation_builder/citation_builder";
 
 
 
@@ -59,40 +61,42 @@ export async function POST(request: NextRequest) {
     //response block
     try {
         let retrieved_uri: Part[] = []
-        let past_context = ''
+        let past_context:{past_conv_arr:string[], user_data:string} = {past_conv_arr:[], user_data:''}
         if(!processer){
             retrieved_uri = await file_retrievial_gemini(chat_id,'gemini-2.0-flash-001')
             past_context = await prompt_builder(chat_id,uid as string)
         }
 
-        const contentBlock: Part[] = [{text: (processer? gemini_processor_prompt:`${past_context} <user_query> ${query ?? ''} </user_query>`)}, ...[...uploaded_files,...retrieved_uri]]
+        const contentBlock: Part[] = [{text: (processer? gemini_processor_prompt:`<Past_convo>${past_context.past_conv_arr.join( ' ')}</Past_convo> <user_details>${past_context.user_data}</user_details></user_details> <user_query> ${query ?? ''} </user_query>`)}, ...[...uploaded_files,...retrieved_uri]]
         const response = await gemini.models.generateContent({
             model: 'gemini-2.0-flash-001',
             contents: [{role: "user", parts: contentBlock}],
             config: {
-                responseMimeType: "application/json",
+                tools: [{ urlContext: {} }, {googleSearch:{}}],
                 ...(!processer && {systemInstruction: prompt_format}),
-                ...(!processer && {responseJsonSchema: gemini_response_format}),
 
             },
 
         });
-        const json_response = JSON.parse(response.text ?? '')
-        console.log('output is ', json_response.response) //copy this into the renderer not the postman one since /n in postman to save space fro json
+        const cited_text = await citation_builder(response)
+        // @ts-ignore
+        console.log('response from origin \n',cited_text ?? response.text)
+        //copy this into the renderer not the postman one since /n in postman to save space from json
 
-        if(!processer){
-            await db_updates(
-                json_response,
-                `${past_context} <user_query> ${query ?? ''} </user_query> ${prompt_format}`,
-                uid as string,
-                chat_id,
-                response,
-                query,
-                file_meta_data,
-            )
-        }
+        const memory_extraction = await memory_extractor(past_context,query, response)
 
-        return NextResponse.json({response: json_response}, {status: 200})
+
+           await db_updates(
+               memory_extraction ,
+               `<convo> user: ${query} || llm_response: ${cited_text? cited_text : response.text} </convo>`,
+               uid as string,
+               chat_id,
+               response,
+               query,
+               file_meta_data,
+           )
+
+        return NextResponse.json({response: (cited_text?cited_text: response.text) ,meta_data:JSON.parse(memory_extraction.text as string)}, {status: 200})
 
     } catch (error) {
         console.error(error)
@@ -137,33 +141,39 @@ async function upload_all_file(files: File[],uid:string) {
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-async function db_updates(json_response:any, text_prompt:string,uid :string, chat_id:string , response:any, query:string | null , file_meta_data:any) {
+async function db_updates(memory_response:GenerateContentResponse, text_prompt:string,uid :string, chat_id:string , response:GenerateContentResponse, query:string | null , file_meta_data:any) {
+    const {title,user_details}:{title: string , user_details: string[]} = JSON.parse(memory_response.text as string)
     try{
         //required
-        if(!json_response.title || !(typeof json_response.title == "string")) throw new Error("Invalid Data for db update")
+
         //updating the user details of user optional
-        if(Array.isArray(json_response.user_details) && (json_response.user_details.length>0) ){
-            await update_user(uid as string, {user_details:json_response.user_details} , 'add')
+        if(Array.isArray(user_details) && (user_details.length>0) ){
+            await update_user(uid as string, {user_details:user_details} , 'add')
         }
         //updating title for the chat
-        await updateChat(chat_id, json_response.title)
+        if(title ) {
+            await updateChat(chat_id, title)
+
+        }
 
         //calculate the text_prompt_token
         const token_response = await gemini.models.countTokens({
             model: 'gemini-2.0-flash',
             contents: text_prompt
         })
-        const text_prompt_token = token_response.totalTokens ?token_response.totalTokens : 0
+        const context_prompt_tokens = token_response.totalTokens ?token_response.totalTokens : 0
         //create new message
-        const total_cost = (response.usageMetadata?.promptTokenCount as number/1000000 * 0.1)  + (response.usageMetadata?.candidatesTokenCount as number/1000000 * 0.4)
+        const total_cost = ( ((response.usageMetadata?.promptTokenCount ?? 0) + (memory_response.usageMetadata?.promptTokenCount ?? 0))/1000000 * 0.1)
+            + (((response.usageMetadata?.candidatesTokenCount ?? 0) + (memory_response.usageMetadata?.candidatesTokenCount ?? 0))/1000000 * 0.4)
+
         const db_create_message = await create_message(
             uid as string,
             chat_id,
             JSON.stringify(query ?? ''),
-            JSON.stringify(json_response.response),
-            text_prompt_token,
-            (response.usageMetadata?.promptTokenCount as number - text_prompt_token),
-            response.usageMetadata?.candidatesTokenCount as number,
+            JSON.stringify(await citation_builder(response) ?? response.text),
+            context_prompt_tokens,
+            (response.usageMetadata?.promptTokenCount as number) + (memory_response.usageMetadata?.promptTokenCount as number),
+            (response.usageMetadata?.candidatesTokenCount as number) + (memory_response.usageMetadata?.candidatesTokenCount as number),
             total_cost,
             'gemini-2.0-flash-001'
         )
