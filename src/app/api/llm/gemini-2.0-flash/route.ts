@@ -1,20 +1,20 @@
 import verifyJWT from "@/lib/jwt/verifyJWT";
 import {NextRequest, NextResponse} from "next/server";
-import {gemini_processor_prompt,  prompt_format} from "@/system_prompts/prompst";
+import {  prompt_format} from "@/system_prompts/prompst";
 import create_message from "@/lib/supabase_helper/message/create_message";
 import updateChat from "@/lib/supabase_helper/chat/update_chat";
 import create_file_metadata from "@/lib/supabase_helper/file meta data/create_file_metadata";
 
 
 //gemini layer
-import {File as File_2, GenerateContentResponse, GoogleGenAI, Part} from '@google/genai';
+import { GenerateContentResponse, GoogleGenAI, Part} from '@google/genai';
 import update_user from "@/lib/supabase_helper/user/update_user";
 import prompt_builder from "@/lib/prompt_builder/prompt_builder";
 import file_retrievial_gemini from "@/lib/prompt_builder/file_retrievial_gemini";
 import {JWTPayload} from "jose";
-import upload_to_storage from "@/Firebase/Utilities/upload_to_storage";
 import memory_extractor from "@/lib/llm_based_processing/memory_extractor";
 import citation_builder from "@/lib/citation_builder/citation_builder";
+import gemini_ocr from "@/lib/llm_based_processing/gemini_ocr";
 
 
 
@@ -22,28 +22,8 @@ const GEMINI_API_KEY = process.env.GEMINI_API;
 const gemini = new GoogleGenAI({apiKey: GEMINI_API_KEY});
 
 
-async function file_upload(file: File,): Promise<File_2 | null> {
-    const array_buffer = await file.arrayBuffer()
-    const blob = new Blob([array_buffer], {type: file.type})
-    try {
-        const file_upload = await gemini.files.upload({
-            file: blob,
-            config: {
-                mimeType: file.type
-            }
-        })
-        return file_upload
-    } catch (error) {
-        console.log({message: 'error occured during uploading to gemini ', cause: error})
-        return null
-    }
-}
-
-
 export async function POST(request: NextRequest) {
-    //get the params if processor then file processing task
     const url = new URL(request.url)
-    const processer = url.searchParams.get('processer') === 'true'
     const chat_id = url.searchParams.get('chat_id')
     if(!chat_id) return NextResponse.json({message: 'missing chat_id in the params '},{status:400})
     //auth layer
@@ -56,24 +36,20 @@ export async function POST(request: NextRequest) {
     const query = formData.get('query') as string | null;
 
     //file uploads block
-    const {uploaded_files,file_meta_data} = await  upload_all_file(files,uid as string)
+    const {uploaded_files,file_meta_data} = await  gemini_ocr(files, uid as string);
 
     //response block
     try {
-        let retrieved_uri: Part[] = []
-        let past_context:{past_conv_arr:string[], user_data:string} = {past_conv_arr:[], user_data:''}
-        if(!processer){
-            retrieved_uri = await file_retrievial_gemini(chat_id,'gemini-2.0-flash-001')
-            past_context = await prompt_builder(chat_id,uid as string)
-        }
+        const retrieved_uri: Part[] = await file_retrievial_gemini(chat_id,'gemini-2.0-flash-001')
+        const  past_context = await prompt_builder(chat_id,uid as string)
 
-        const contentBlock: Part[] = [{text: (processer? gemini_processor_prompt:`<Past_convo>${past_context.past_conv_arr.join( ' ')}</Past_convo> <user_details>${past_context.user_data}</user_details></user_details> <user_query> ${query ?? ''} </user_query>`)}, ...[...uploaded_files,...retrieved_uri]]
+        const contentBlock: Part[] = [{text: (`<Past_convo>${past_context.past_conv_arr.join( ' ')}</Past_convo> <user_details>${past_context.user_data}</user_details></user_details> <user_query> ${query ?? ''} </user_query>`)}, ...[...uploaded_files,...retrieved_uri]]
         const response = await gemini.models.generateContent({
             model: 'gemini-2.0-flash-001',
             contents: [{role: "user", parts: contentBlock}],
             config: {
                 tools: [{ urlContext: {} }, {googleSearch:{}}],
-                ...(!processer && {systemInstruction: prompt_format}),
+                systemInstruction: prompt_format,
 
             },
 
@@ -102,41 +78,8 @@ export async function POST(request: NextRequest) {
         console.error(error)
         return NextResponse.json({
             message: 'fail to get a response from gemini api',
-            cause: String(error)
+            cause: JSON.parse(String(error)),
         }, {status: 500})
-    }
-}
-
-
-async function upload_all_file(files: File[],uid:string) {
-    let uploaded_files: Part[] = []
-    let file_meta_data:{file_name:string , file_size:number,storage_ref:string, gemini_uri_part:{fileData:{mimeType:string,fileUri:string}}}[] =[]
-
-    for (const file of files) {
-        const file_data = await file_upload(file)
-        if (!file_data) continue
-        const storage_ref = await upload_to_storage(file,uid)
-        uploaded_files.push({
-            fileData: {
-                mimeType: file_data?.mimeType,
-                fileUri: file_data?.uri
-            }})
-        file_meta_data.push({
-            file_name:file.name ,
-            file_size:file.size,
-            storage_ref: storage_ref,
-            gemini_uri_part:{
-                fileData: {
-                    mimeType: file_data?.mimeType as string,
-                    fileUri: file_data?.uri as string
-                }
-            }
-        })
-    }
-
-    return {
-        uploaded_files: uploaded_files,
-        file_meta_data: file_meta_data,
     }
 }
 
