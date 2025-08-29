@@ -1,25 +1,28 @@
-"use client"
-import SplitText from "./Components/ReactBits/SplitText/SplitText"
+'use client';
+import SplitText from './Components/ReactBits/SplitText/SplitText';
 
-import {Button} from "@/components/ui/button";
-import dynamic from "next/dynamic";
-import {useRouter} from "next/navigation";
+import { Button } from '@/components/ui/button';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 
 const Dither = dynamic(() => import('./Components/ReactBits/Dither/Dither'), {
     ssr: false,
-    loading: () => <p>Loading...</p> // Optional loading component
+    loading: () => <p>Loading...</p>, // Optional loading component
 });
 
 export default function Home() {
-    const router = useRouter()
+    const router = useRouter();
 
     function toLoginPage() {
-        router.push('/login')
+        router.push('/login');
     }
 
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-black">
-            <div className="" style={{width: '100%', height: '100%', position: 'absolute'}}>
+            <div
+                className=""
+                style={{ width: '100%', height: '100%', position: 'absolute' }}
+            >
                 <Dither
                     waveColor={[0.5, 0.5, 0.5]}
                     disableAnimation={false}
@@ -40,12 +43,11 @@ export default function Home() {
                     duration={2}
                     ease="elastic.out(1,0.3)"
                     splitType="chars"
-                    from={{opacity: 0, y: 40}}
-                    to={{opacity: 1, y: 0}}
+                    from={{ opacity: 0, y: 40 }}
+                    to={{ opacity: 1, y: 0 }}
                     threshold={0.1}
                     rootMargin="-100px"
                     textAlign="center"
-
                 />
                 <SplitText
                     text="Multi-model, memory-aware, and built for the curious."
@@ -54,18 +56,19 @@ export default function Home() {
                     duration={0.3}
                     ease="power3.out"
                     splitType="words"
-                    from={{opacity: 0, y: 40}}
-                    to={{opacity: 1, y: 0}}
+                    from={{ opacity: 0, y: 40 }}
+                    to={{ opacity: 1, y: 0 }}
                     threshold={0.1}
                     rootMargin="-100px"
                     textAlign="center"
-
                 />
 
-                <Button onClick={toLoginPage}
-                        className="mt-2 text-lg backdrop-blur-lg bg-white/20 hover:bg-white hover:text-black hover:scale-105 transition-transform ease-in-out">Login
-                    / Sign Up</Button>
-
+                <Button
+                    onClick={toLoginPage}
+                    className="mt-2 text-lg backdrop-blur-lg bg-white/20 hover:bg-white hover:text-black hover:scale-105 transition-transform ease-in-out"
+                >
+                    Login / Sign Up
+                </Button>
             </div>
         </div>
     );

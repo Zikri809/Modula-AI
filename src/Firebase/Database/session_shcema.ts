@@ -1,4 +1,4 @@
-import {Part} from "@google/genai";
+import { Part } from '@google/genai';
 
 interface FileMetaDataFile {
     original_name: string;
@@ -9,8 +9,8 @@ interface FileMetaDataFile {
 }
 
 interface GeminiMetaData {
-    upload_exipration_date: string //ISO string
-    uploaded_file: Part[]
+    upload_exipration_date: string; //ISO string
+    uploaded_file: Part[];
 }
 
 interface UploadedFile {
@@ -40,9 +40,15 @@ interface SessionSchema {
     createdAt: string; // ISO Date string
     modifiedAt: string; // ISO Date string
     file_meta_data: FileMetaData;
-    GeminiMetaData: GeminiMetaData //this helps us to use the existing file uploaded to gemini as part of context on subsequent request with 48h of upload
+    GeminiMetaData: GeminiMetaData; //this helps us to use the existing file uploaded to gemini as part of context on subsequent request with 48h of upload
     conversations: [];
 }
 
-
-export type {FileMetaData, FileMetaDataFile, UploadedFile, Conversation, SessionSchema, GeminiMetaData}
+export type {
+    FileMetaData,
+    FileMetaDataFile,
+    UploadedFile,
+    Conversation,
+    SessionSchema,
+    GeminiMetaData,
+};
