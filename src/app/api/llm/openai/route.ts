@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
             },
         ] as ChatCompletionMessageParam[];
         const open_ai_responses = await openai.chat.completions.create({
-            model: `moonshotai/kimi-k2:free${web_search ? ':online' : ''}`,
+            model: `deepseek/deepseek-chat-v3.1:free${web_search ? ':online' : ''}`,
             messages: messages,
         });
 

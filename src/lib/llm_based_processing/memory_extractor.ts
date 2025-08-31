@@ -15,6 +15,10 @@ export default async function (
 ) {
     if (!query) query = '';
     if (!past_context || !response) throw new Error('missing parameter');
+    console.log(
+        'get passed to extractor \n',
+        `<user_details>${past_context.user_data}</user_details> <last_2_convo>${past_context.past_conv_arr.slice(past_context.past_conv_arr.length - 2)}</last_2_convo> <Current_user_query> ${query ?? ''} </Current_user_query> <current_response>${response.text}</current_response>`
+    );
     try {
         const memory_extraction = await gemini.models.generateContent({
             model: 'gemini-2.0-flash-001',

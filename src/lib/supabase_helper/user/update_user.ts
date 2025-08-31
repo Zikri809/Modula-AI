@@ -20,7 +20,8 @@ export default async function update_user(
     const parsed = update_schema.strict().safeParse(request_body);
     const { data, error } = parsed;
     if (error) throw error;
-    let { user_details } = data;
+    //this is to be added one
+    let user_details = data.user_details ?? [];
     try {
         if (user_details && user_details.length > 0 && user_details_operation) {
             let { data: read_data, error: read_error } = await supabase
@@ -29,6 +30,10 @@ export default async function update_user(
                 .eq('uid', uid)
                 .single();
             if (read_error || !read_data) throw read_error;
+            console.log(
+                'previous memory before updating is \n',
+                read_data.user_details
+            );
             read_data.user_details = read_data?.user_details ?? [];
             if (user_details_operation === 'add') {
                 for (const element of user_details) {
@@ -47,8 +52,13 @@ export default async function update_user(
             data.user_details = Array.from(
                 new Set(read_data?.user_details as string[])
             );
+        } else {
+            //if no update on memory delete the key thus prevent overwrite in db
+            delete data.user_details;
         }
         //add to db
+        //no update in payload exit early
+        if (Object.keys(data).length == 0) return true;
         const { data: update_data, error: update_error } = await supabase
             .from('users')
             .update(data)

@@ -122,6 +122,10 @@ async function db_updates(
 
         //updating the user details of user optional
         if (Array.isArray(user_details)) {
+            console.log(
+                'user details passed to db on gemini endpoint\n',
+                user_details
+            );
             await update_user(
                 uid as string,
                 { user_details: user_details },

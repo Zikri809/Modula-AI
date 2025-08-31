@@ -5,19 +5,16 @@ export default async function read_message(chat_id: string) {
     const supabse = await createClient();
 
     try {
-        const db = await supabse
+        const {data, error} = await supabse
             .from('messages')
             .select(
-                'message_id,created_at,user_prompt,prompt_tokens,response_tokens,llm_response,llm_model'
+                'message_id,created_at,user_prompt,llm_response,llm_model'
             )
             .eq('chat_id', chat_id)
-            .order('created_at', { ascending: false });
-        if (!db.data)
-            throw new Error(
-                `no such chat / no data provided ${db.error.message} hint is ${db.error.hint}`
-            );
+            .order('created_at', { ascending: true });
+        if(error) throw error;
         //return array of rows
-        return db.data;
+        return data;
     } catch (err) {
         throw err;
     }

@@ -5,7 +5,7 @@ function sleep(ms: number) {
 export default async function (id: string) {
     try {
         console.log('id is ', id);
-        await sleep(300);
+        await sleep(800);
         const costInfo = await fetch(
             `https://openrouter.ai/api/v1/generation?id=${id}`,
             {
