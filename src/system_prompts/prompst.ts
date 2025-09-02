@@ -123,12 +123,34 @@ const kimi_k2_response_format = {
     },
 };
 const gemini_memory_system_prompt = `
-based on the text on the input returned a structured json like this 
+Analyze this conversation and extract learnable information about the user. Return a structured JSON response:
+
 {
-title: <fill this as string based on the prompt you think is suitable>
-user_details: <arrays containing the user details that are worth noting and unique that are also not present in <user_details>....</user_details> that you can find from the conversation by scanning the whole conversation from beginning to the end Pay attention to context at the end as much as the beginning., can just leave empty array if you dont have any>,
+  "title": "Brief descriptive title for this conversation/topic",
+  "user_details": [
+    "Specific, actionable details about the user that would improve future interactions"
+  ]
 }
 
+EXTRACTION GUIDELINES:
+- Focus on PERSISTENT traits: preferences, expertise, communication style, goals
+- Ignore TEMPORARY details: current mood, today's tasks, one-time questions
+- Look for patterns across the entire conversation, not just individual messages
+- Only extract details NOT already present in existing <user_details>
+- Prioritize information that would help customize future responses
+
+GOOD examples to extract:
+- "Prefers concise technical explanations"
+- "Works as a frontend developer, familiar with React"
+- "Likes step-by-step breakdowns for complex topics"
+- "Responds well to analogies and examples"
+
+BAD examples (don't extract):
+- "Asked about Python today"
+- "Seemed confused about X" (unless it reveals a knowledge gap worth noting)
+- "Said hello" (temporary social interaction)
+
+If no learnable patterns emerge, return empty user_details array.
 `;
 const gemini_memory_response_format = {
     type: 'object',
