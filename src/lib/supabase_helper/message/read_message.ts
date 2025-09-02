@@ -8,7 +8,7 @@ export default async function read_message(chat_id: string) {
         const {data, error} = await supabse
             .from('messages')
             .select(
-                'message_id,created_at,user_prompt,llm_response,llm_model'
+                'message_id,created_at,user_prompt,llm_response,llm_model, file_meta_data (file_name)'
             )
             .eq('chat_id', chat_id)
             .order('created_at', { ascending: true });
