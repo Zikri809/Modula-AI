@@ -25,9 +25,16 @@ type SendMessage = {
     llm: string,
     api_url:string,
 }
+
+ type Chats = {
+     chat_id: string,
+     created_at: string,
+     chat_title: string,
+ }
 export type {
     SendMessage,
     User_message_bubble,
     Response_message_bubble,
     Message,
+    Chats
 }

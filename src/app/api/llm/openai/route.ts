@@ -117,7 +117,8 @@ export async function POST(request: NextRequest) {
             query,
             open_ai_responses.choices[0].message.content ?? '',
             file_meta_data,
-            ocr_response
+            ocr_response,
+            'deepseek/deepseek-chat-v3.1:free'
         );
 
         console.log(

@@ -102,7 +102,7 @@ export default function chat_input({isSending, sendToParent, className}: chat_in
 
     }
     return (
-        <div className={`${className} flex flex-col gap-2 max-w-full sm:max-w-150 `}>
+        <div className={`${className} flex flex-col gap-2 max-w-full sm:max-w-250 `}>
             <div className='flex-wrap  flex gap-2 max-w-full'>
                 {/*this is the file rendering icon*/}
                 {

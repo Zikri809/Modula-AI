@@ -7,13 +7,22 @@ import {useMutation, useQuery} from '@tanstack/react-query'
 import Chat_input from "@/app/Components/SelfComponent/chat_ui/chat_input";
 import {useQueryClient} from "@tanstack/react-query";
 import {Toaster} from "sonner";
-
+import {Loader} from "lucide-react";
+import Chat_navbar from "@/app/Components/SelfComponent/chat_ui/Chat_navbar";
+import {useRouter, useSearchParams} from "next/navigation";
+import {AppSidebar} from "@/app/Components/SelfComponent/sidebar/app-sidebar";
 
 
 export default function Chat(){
     const [sendMessage, SetSendMessage] = useState<SendMessage>();
     const [isSending, setIsSending] = useState<boolean>(false);
+    const [rerender_navbar_key, SetRerenderNavbar_key] = useState<string>(crypto.randomUUID());
     const queryClient = useQueryClient();
+    
+    //read chat_id from url then adjust accordingly
+    const params = useSearchParams()
+    const chat_id = params.get("chat_id")
+
     const mutator = useMutation({
         mutationFn: async (message:SendMessage) => {
             const formdata = new FormData();
@@ -23,14 +32,14 @@ export default function Chat(){
                     formdata.append('file',file);
                 }
             }
-            const result = await fetch(`${message.api_url}?chat_id=d1272d65-4f09-4f01-9fbe-1c90bbf274ad`,{
+            const result = await fetch(`${message.api_url}?chat_id=${chat_id}`,{
                 method: "POST",
                 body: formdata,
             })
             return result.json()
         },
         onSuccess: async (api_response) => {
-            queryClient.setQueryData(['message'],(old_data: Message[])=>{
+            queryClient.setQueryData(['message',chat_id],(old_data: Message[])=>{
                     setIsSending(false)
                     return old_data.map((message_obj)=>(
                         message_obj.status == 'loading' ? (
@@ -41,7 +50,7 @@ export default function Chat(){
             )
         },
         onError: async () => {
-            queryClient.setQueryData(['message'],(old_data: Message[])=>{
+            queryClient.setQueryData(['message',chat_id],(old_data: Message[])=>{
                     setIsSending(false)
                     return old_data.map((message_obj)=>(
                         message_obj.status == 'loading' ? (
@@ -74,7 +83,7 @@ export default function Chat(){
             }
         ]
 
-        queryClient.setQueryData(['message'],(old_data)=>(
+        queryClient.setQueryData(['message',chat_id],(old_data)=>(
             [...old_data as Message[],...message_obj]
             )
         )
@@ -85,12 +94,13 @@ export default function Chat(){
 
 
     const {data:message, isError ,isLoading} = useQuery<Message[]>({
-        queryKey: ['message'],
-        queryFn: async() =>{
+        queryKey: ['message',chat_id],
+        queryFn: async():Promise<Message[]> =>{
             try{
-                const fetch_messages = await fetch('api/message/read?chat_id=d1272d65-4f09-4f01-9fbe-1c90bbf274ad', {
+                const fetch_messages = await fetch(`api/message/read?chat_id=${chat_id}`, {
                     method: 'POST',
                 })
+                if (!fetch_messages) return []
                 return await fetch_messages.json();
             } catch (e){
                 console.log(e)
@@ -105,21 +115,30 @@ export default function Chat(){
         })
     }, [message]);
     return (
-        <div className={'relative w-full  flex flex-col items-center '}>
-            <Toaster className={'z-100'} richColors={true} position="top-right"/>
-            <div className='p-4 w-full h-fit overflow-hidden max-w-150 flex flex-col gap-4 bg-black'>
-                {!isLoading && !isError ?(
-                    message?.map(({role, message, created_at,file_meta_data,status}: Message,index) => {
-                    if (role === "user") {
-                        return <User_chat_bubble key={index} username={role} user_prompt={message} time={created_at} file_meta_data={   file_meta_data}/>
-                    } else {
-                       return <Response_chat_buble key={index} llm_model={role} llm_response={message} time={created_at} state={status} />
-                    }
-                })
-                ):<div className='text-white text-center text-3xl'>......</div>}
+        <AppSidebar chat_id={chat_id as string}>
 
+            <div className={'relative w-full min-h-screen  flex flex-col items-center justify-center'}>
+                <Toaster className={'z-100'} richColors={true} position="top-right"/>
+
+                {!isLoading && !isError && chat_id ?(
+                    <>
+                        <Chat_navbar  chat_id={chat_id} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
+                        <div  className='p-4 w-full min-h-[76dvh] h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
+                            {
+                                (message as Message[]).length > 0?(message?.map(({role, message, created_at, file_meta_data, status}: Message, index) => {
+                                    if (role === "user") {
+                                        return <User_chat_bubble key={index} username={role} user_prompt={message}
+                                                                 time={created_at}
+                                                                 file_meta_data={file_meta_data}/>
+                                    } else {
+                                        return <Response_chat_buble key={index} llm_model={role} llm_response={message}
+                                                                    time={created_at} state={status}/>
+                                    }
+                                })): <p className={'my-auto font-bold text-lg text-neutral-300 px-4 text-center'}>Modula AI - multi LLM chatbot with memory of you as we engage !</p>}
+                        </div>
+                        <Chat_input className={'sticky px-4 w-full bg-neutral-900 rounded-t-2xl py-4 bottom-0 z-10'} isSending={isSending} sendToParent={SetSendMessage}/>
+                    </>):<Loader size={32} className={'animate-spin text-white'}/>}
             </div>
-            <Chat_input className={'sticky px-4 w-full bg-neutral-900 rounded-t-2xl py-4 bottom-0 z-10'} isSending={isSending} sendToParent={SetSendMessage}/>
-        </div>
+        </AppSidebar>
     )
 }

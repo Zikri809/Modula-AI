@@ -27,7 +27,8 @@ export default async function (
     query: string | null,
     open_ai_response: string,
     file_meta_data: any,
-    ocr_response: GenerateContentResponse | undefined
+    ocr_response: GenerateContentResponse | undefined,
+    model: string,
 ) {
     const { title, user_details }: { title: string; user_details: string[] } =
         JSON.parse(memory_response.text as string);
@@ -80,7 +81,7 @@ export default async function (
                     ?.candidatesTokenCount as number) +
                 (ocr_response?.usageMetadata?.candidatesTokenCount ?? 0),
             total_cost,
-            'moonshotai/kimi-k2:free'
+            model
         );
         //optional
         if (file_meta_data.length > 0) {
