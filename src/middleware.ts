@@ -19,6 +19,8 @@ export default async function middleware(request: NextRequest) {
         );
 
     //if the token is valid we proceed
+    if (request.nextUrl.pathname === '/')
+        return NextResponse.redirect('/chat');
     return NextResponse.next();
 }
 export const config = {

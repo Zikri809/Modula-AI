@@ -16,4 +16,4 @@ export const auth = admin.auth();
 export const db = admin.firestore();
 export const bucket = admin
     .storage()
-    .bucket(process.env.NEXT_PUBLIC_STORAGE_BUCKET);
+    .bucket(process.env.PUBLIC_STORAGE_BUCKET);

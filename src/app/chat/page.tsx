@@ -11,6 +11,8 @@ import {Loader} from "lucide-react";
 import Chat_navbar from "@/app/Components/SelfComponent/chat_ui/Chat_navbar";
 import {useRouter, useSearchParams} from "next/navigation";
 import {AppSidebar} from "@/app/Components/SelfComponent/sidebar/app-sidebar";
+import {Button} from "@/components/ui/button";
+import Greetings_component from "@/app/Components/SelfComponent/chat_ui/Greetings_component";
 
 
 export default function Chat(){
@@ -107,6 +109,7 @@ export default function Chat(){
                 throw e
             }
         },
+        enabled: chat_id? true : false,
     })
     useEffect(() => {
         window.scrollTo({
@@ -117,8 +120,8 @@ export default function Chat(){
     return (
         <AppSidebar chat_id={chat_id as string}>
 
-            <div className={'relative w-full min-h-screen  flex flex-col items-center justify-center'}>
-                <Toaster className={'z-100'} richColors={true} position="top-right"/>
+            <div className={`relative w-full min-h-screen  flex flex-col items-center justify-center`}>
+                <Toaster className={'z-100'}  position="top-right"/>
 
                 {!isLoading && !isError && chat_id ?(
                     <>
@@ -137,7 +140,7 @@ export default function Chat(){
                                 })): <p className={'my-auto font-bold text-lg text-neutral-300 px-4 text-center'}>Modula AI - multi LLM chatbot with memory of you as we engage !</p>}
                         </div>
                         <Chat_input className={'sticky px-4 w-full bg-neutral-900 rounded-t-2xl py-4 bottom-0 z-10'} isSending={isSending} sendToParent={SetSendMessage}/>
-                    </>):<Loader size={32} className={'animate-spin text-white'}/>}
+                    </>):(!isLoading && !chat_id? <Greetings_component/>:<Loader size={32} className={'animate-spin text-white'}/>)}
             </div>
         </AppSidebar>
     )

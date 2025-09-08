@@ -95,7 +95,7 @@ export function LoginForm({
             create_user();
             toast.success('Sign In successful redirecting ... ');
             setTimeout(() => {
-                router.push('/');
+                router.push('/chat');
             }, 1500);
         }
     }, [google_error, google_user]);
@@ -106,7 +106,7 @@ export function LoginForm({
             create_user();
             toast.success('Sign up Successful redirecting ...');
             setTimeout(() => {
-                router.push('/');
+                router.push('/chat');
             }, 1500);
         }
         if (signup_error) {
@@ -125,7 +125,7 @@ export function LoginForm({
         if (signIn_user) {
             toast.success('Sign in Successful redirecting ...');
             setTimeout(() => {
-                router.push('/');
+                router.push('/chat');
             }, 1500);
         }
         if (signIn_error) {

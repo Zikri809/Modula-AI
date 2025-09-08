@@ -172,7 +172,7 @@ async function db_updates(
                     ?.candidatesTokenCount as number) +
                 (ocr_response?.usageMetadata?.candidatesTokenCount ?? 0),
             total_cost,
-            'gemini-2.0-flash-001'
+            'Gemini-2.0'
         );
         //optional
         if (file_meta_data.length > 0) {

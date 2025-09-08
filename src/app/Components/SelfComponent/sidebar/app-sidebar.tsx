@@ -82,7 +82,7 @@ export function AppSidebar(
                             {
                                 !isLoading ? (
                                     ! isLoading && chat_data?.response.map((chat:Chats,index:number) => (
-                                        <SidebarMenuItem key={index} className={'flex flex-row text-white p-2'}>
+                                        <SidebarMenuItem key={chat.chat_id} className={'flex flex-row text-white p-2'}>
                                             <SidebarMenuButton onClick={()=>accessChat(chat.chat_id)} className={' text-md hover:bg-neutral-800 hover:text-white'}>
                                                 <MessageCircleDashed />
                                                 <p className={'line-clamp-1'}>{chat.chat_title ?? 'New Chat'}</p>
