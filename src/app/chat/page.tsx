@@ -2,7 +2,7 @@
 import User_chat_bubble from "@/app/Components/SelfComponent/chat_ui/user_chat_bubble";
 import Response_chat_buble from "@/app/Components/SelfComponent/chat_ui/response_chat_buble";
 import {useEffect, useState} from "react";
-import {Message, SendMessage} from "@/app/Types/chat_types/chat_types";
+import {EditMessage, Message, SendMessage} from "@/app/Types/chat_types/chat_types";
 import {useMutation, useQuery} from '@tanstack/react-query'
 import Chat_input from "@/app/Components/SelfComponent/chat_ui/chat_input";
 import {useQueryClient} from "@tanstack/react-query";
@@ -19,6 +19,7 @@ export default function Chat(){
     const [sendMessage, SetSendMessage] = useState<SendMessage>();
     const [isSending, setIsSending] = useState<boolean>(false);
     const [rerender_navbar_key, SetRerenderNavbar_key] = useState<string>(crypto.randomUUID());
+    const [edit, setEdit] = useState<EditMessage>({isEditing: false});
     const queryClient = useQueryClient();
     
     //read chat_id from url then adjust accordingly
@@ -46,7 +47,7 @@ export default function Chat(){
                     return old_data.map((message_obj)=>(
                         message_obj.status == 'loading' ? (
                             {...message_obj, message: JSON.stringify(api_response.response), status: 'success' }
-                        ) : message_obj
+                        ) : (message_obj.message_id ==-99 ? {...message_obj, message_id: api_response.message_id}  :message_obj)
                     ))
         }
             )
@@ -75,6 +76,7 @@ export default function Chat(){
                 "role": "user",
                 "message": sendMessage?.prompt,
                 "created_at": new Date().toISOString(),
+                "message_id": -99,
                 "file_meta_data": sendMessage?.file.map((file_obj)=>({file_name: file_obj.name}))
             },
             {
@@ -84,6 +86,15 @@ export default function Chat(){
                 status: "loading",
             }
         ]
+        if(edit.isEditing){
+            edit_delete(edit.message_id_editing as number,chat_id as string)
+            const in_edit_index = message?.findIndex(value => value.message_id == edit.message_id_editing)
+            queryClient.setQueryData(['message',chat_id],(old_data )=>(
+                (old_data as Message[]).slice(0,in_edit_index as number)
+                )
+            )
+            setEdit({isEditing: false, message_id_editing:undefined, prompt:undefined})
+        }
 
         queryClient.setQueryData(['message',chat_id],(old_data)=>(
             [...old_data as Message[],...message_obj]
@@ -128,20 +139,32 @@ export default function Chat(){
                         <Chat_navbar  chat_id={chat_id} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
                         <div  className='p-4 w-full min-h-[76dvh] h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
                             {
-                                (message as Message[]).length > 0?(message?.map(({role, message, created_at, file_meta_data, status}: Message, index) => {
+                                (message as Message[]).length > 0?(message?.map(({ message_id, role, message, created_at, file_meta_data, status}: Message, index) => {
                                     if (role === "user") {
                                         return <User_chat_bubble key={index} username={role} user_prompt={message}
                                                                  time={created_at}
-                                                                 file_meta_data={file_meta_data}/>
+                                                                 message_id={message_id as number}
+                                                                 file_meta_data={file_meta_data ?? []}
+                                                                 SetEdit={setEdit}
+                                        />
                                     } else {
                                         return <Response_chat_buble key={index} llm_model={role} llm_response={message}
                                                                     time={created_at} state={status}/>
                                     }
                                 })): <p className={'my-auto font-bold text-lg text-neutral-300 px-4 text-center'}>Modula AI - multi LLM chatbot with memory of you as we engage !</p>}
                         </div>
-                        <Chat_input className={'sticky px-4 w-full bg-neutral-900 rounded-t-2xl py-4 bottom-0 z-10'} isSending={isSending} sendToParent={SetSendMessage}/>
+                        <Chat_input className={'sticky px-4 w-full bg-neutral-900 rounded-t-2xl py-4 bottom-0 z-10'}
+                                    isSending={isSending} sendToParent={SetSendMessage}
+                                    editObject={edit}
+                                    SetEditing={setEdit}
+                        />
                     </>):(!isLoading && !chat_id? <Greetings_component/>:<Loader size={32} className={'animate-spin text-white'}/>)}
             </div>
         </AppSidebar>
     )
+}
+async function edit_delete(message_id:number, chat_id:string){
+    const result = await fetch(`api/message/delete?message_id=${message_id}&chat_id=${chat_id}`,{
+        method: "DELETE",
+    })
 }

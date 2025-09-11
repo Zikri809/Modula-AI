@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
             let messages = []
             for (const row_message of db) {
                 messages.push(
-                    {role:'user', message:row_message.user_prompt , created_at: row_message.created_at, file_meta_data: row_message.file_meta_data},
+                    { message_id:row_message.message_id, role:'user', message:row_message.user_prompt , created_at: row_message.created_at, file_meta_data: row_message.file_meta_data},
                     {role: row_message.llm_model, message:row_message.llm_response, created_at: row_message.created_at, status: 'success'}
                     );
             }

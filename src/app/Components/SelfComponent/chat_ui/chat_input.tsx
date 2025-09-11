@@ -1,29 +1,41 @@
 "use client";
 import {Textarea} from "@/components/ui/textarea";
-import {BrainCircuit, ChevronsUpDown, File as FileIcon, Globe, Loader2Icon, Paperclip, Send, X} from "lucide-react";
+import {
+    BrainCircuit,
+    ChevronsUpDown,
+    File as FileIcon,
+    Globe,
+    Loader2Icon,
+    Paperclip,
+    Pen,
+    Send,
+    X
+} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {ChangeEvent, useRef, useState} from "react";
+import {ChangeEvent, useEffect, useRef, useState} from "react";
 import {toast} from "sonner";
-import {SendMessage} from "@/app/Types/chat_types/chat_types";
+import {EditMessage, SendMessage} from "@/app/Types/chat_types/chat_types";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Command, CommandItem, CommandList} from "@/components/ui/command";
 
 const model_combo_box_list =[
     {
         value: "deepseek/deepseek-chat-v3.1:free",
-        label: 'deepseek-v3.1',
+        label: 'Deepseek-V3.1',
     },
     {
         value: "gemini-2.0-flash",
-        label: 'gemini-2.0',
+        label: 'Gemini-2.0 Flash',
     }
 ]
 type chat_input = React.HTMLAttributes<HTMLDivElement> & {
     isSending:boolean,
     sendToParent:(value:SendMessage)=>void,
+    editObject: EditMessage,
+    SetEditing: (value: EditMessage) => void,
 }
 
-export default function chat_input({isSending, sendToParent, className}: chat_input) {
+export default function chat_input({isSending, sendToParent, className,editObject,SetEditing}: chat_input) {
     const [file, setFile] = useState<{file:File,file_type:string, file_name:string}[]>();
     const [input_text, setInput_text] = useState<string>("");
     const [web_search, setWebSearch] = useState<boolean>(false);
@@ -32,6 +44,11 @@ export default function chat_input({isSending, sendToParent, className}: chat_in
     const [model_popover_value, setModelPopover_value] = useState<string>('');
     const file_input_ref = useRef<HTMLInputElement>(null);
 
+    //this will trigger when the edit clicked change parent state then change the input field
+    useEffect(() => {
+        if(!editObject.isEditing) return;
+        setInput_text(editObject.prompt as string)
+    },[editObject])
 
     function uploadFile(){
         if(!file_input_ref.current) return
@@ -89,22 +106,45 @@ export default function chat_input({isSending, sendToParent, className}: chat_in
             prompt: JSON.stringify(input_text),
             web_search: web_search,
             reasoning: reasoning,
-            llm: model_popover_value ? model_popover_value : 'gemini-2.0-flash' ,
+            llm: model_popover_value ? model_combo_box_list[model_combo_box_list.findIndex(element => element.value == model_popover_value)].label : 'Gemini-2.0 Flash' ,
             api_url: api_url,
         }
         //reset back
-        setWebSearch(false)
-        setReasoning(false)
-        setModelPopover_value('')
         setInput_text('')
         setFile([])
         sendToParent(MessageObject);
 
     }
+
+    function onCancelEdit(){
+        SetEditing({
+            isEditing: false,
+            message_id_editing: undefined,
+            prompt: undefined,
+        })
+        //reset back
+        setInput_text('')
+        setFile([])
+    }
+
+
     return (
         <div className={`${className} flex flex-col gap-2 max-w-full sm:max-w-250 `}>
+            {
+                editObject.isEditing ?
+                    <div className={'relative text-sm w-30 bg-black border-2 p-2 border-blue-500 text-blue-500 rounded-2xl flex-row flex gap-2 items-center'}>
+                        <div className={'flex flex-row items-center w-full gap-2'}>
+                            <Pen size={15}/>
+                            <p>Editing</p>
+
+                        </div>
+                        <Button size={"icon"}
+                                onClick={onCancelEdit}
+                                className={' bg-transparent  m-0  hover:text-white text-blue-500 p-1   h-4 w-4 right-2 top-2 rounded-full'}><X className={'h-1 w-1'}/></Button>
+                    </div> :<></>
+            }
             <div className='flex-wrap  flex gap-2 max-w-full'>
-                {/*this is the file rendering icon*/}
+                {/*this is the file rendering icon and editing icon*/}
                 {
                     file?.map((item,index) => (
                         <div key={index} className={' flex flex-row gap-1 flex-1 min-w-40 bg-neutral-800 p-3 rounded-2xl items-center  h-fit w-fit'}>
@@ -121,6 +161,7 @@ export default function chat_input({isSending, sendToParent, className}: chat_in
                         </div>
                     ))
                 }
+
             </div>
 
             <div className="flex-row flex items-end justify-center bg-neutral-800 rounded-3xl gap-2 w-full">

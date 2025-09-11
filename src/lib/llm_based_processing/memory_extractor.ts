@@ -38,6 +38,7 @@ export default async function (
                 responseJsonSchema: gemini_memory_response_format,
             },
         });
+        console.log('extractor complete')
         return memory_extraction;
     } catch (err) {
         throw err;

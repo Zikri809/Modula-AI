@@ -17,7 +17,7 @@ type Openai_metadata = {
     total_completions_token: number;
     total_token: number;
 };
-
+//returns message id
 export default async function (
     memory_response: GenerateContentResponse,
     text_prompt: string,
@@ -91,6 +91,7 @@ export default async function (
                 file_meta_data
             );
         }
+        return db_create_message;
     } catch (error) {
         throw error;
     }

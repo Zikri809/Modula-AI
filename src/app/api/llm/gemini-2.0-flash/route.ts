@@ -14,6 +14,7 @@ import { JWTPayload } from 'jose';
 import memory_extractor from '@/lib/llm_based_processing/memory_extractor';
 import citation_builder from '@/lib/citation_builder/citation_builder';
 import gemini_ocr from '@/lib/llm_based_processing/gemini_ocr';
+import {next} from "effect/Cron";
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
 const gemini = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -48,18 +49,19 @@ export async function POST(request: NextRequest) {
             'gemini-2.0-flash-001'
         );
         const past_context = await prompt_builder(chat_id, uid as string);
-
+        console.table(...[...uploaded_files, ...retrieved_uri]);
         const contentBlock: Part[] = [
             {
                 text: `<Past_convo>${past_context.past_conv_arr.join(' ')}</Past_convo> <user_details>${past_context.user_data}</user_details></user_details> <user_query> ${query ?? ''} </user_query>`,
             },
             ...[...uploaded_files, ...retrieved_uri],
         ];
+        console.log('generating content on gemini api')
         const response = await gemini.models.generateContent({
             model: 'gemini-2.0-flash-001',
             contents: [{ role: 'user', parts: contentBlock }],
             config: {
-                tools: [{ urlContext: {} }, { googleSearch: {} }],
+                tools: [ { googleSearch: {} }],
                 systemInstruction: prompt_format,
             },
         });
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
             response
         );
 
-        await db_updates(
+        const message_id = await db_updates(
             memory_extraction,
             `<convo> user: ${query} || llm_response: ${cited_text ? cited_text : response.text} </convo>`,
             uid as string,
@@ -88,6 +90,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 response: cited_text ? cited_text : response.text,
+                message_id: message_id,
                 meta_data: JSON.parse(memory_extraction.text as string),
             },
             { status: 200 }
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 message: 'fail to get a response from gemini api',
-                cause: JSON.parse(String(error)),
+                cause: error,
             },
             { status: 500 }
         );
@@ -158,7 +161,7 @@ async function db_updates(
                 1000000) *
                 0.4;
 
-        const db_create_message = await create_message(
+        const message_id = await create_message(
             uid as string,
             chat_id,
             JSON.stringify(query ?? ''),
@@ -172,16 +175,17 @@ async function db_updates(
                     ?.candidatesTokenCount as number) +
                 (ocr_response?.usageMetadata?.candidatesTokenCount ?? 0),
             total_cost,
-            'Gemini-2.0'
+            'Gemini-2.0 Flash'
         );
         //optional
         if (file_meta_data.length > 0) {
             await create_file_metadata(
                 chat_id,
-                db_create_message,
+                message_id,
                 file_meta_data
             );
         }
+        return message_id;
     } catch (error) {
         throw error;
     }

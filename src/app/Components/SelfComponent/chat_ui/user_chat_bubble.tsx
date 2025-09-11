@@ -4,10 +4,19 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import ReactMarkdown from "react-markdown";
-import {File as FileIcon, X} from "lucide-react";
+import {File as FileIcon, PenLine, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
 
-export default function user_chat_bubble({username,user_prompt,time, file_meta_data}:User_message_bubble) {
+export default function user_chat_bubble({message_id, username,user_prompt,time, file_meta_data,SetEdit}:User_message_bubble) {
+
+    function onEdit(){
+        SetEdit({
+            isEditing: true,
+            message_id_editing: message_id,
+            prompt: JSON.parse(user_prompt),
+        });
+    }
+
     return(
         <div className='text-sm sm:text-base flex flex-col gap-2 bg-black broder-b-1 border-neutral-500 h-fit w-full text-white'>
             <p className='pr-1 text-right bg-blcak text-white'>{username}</p>
@@ -54,7 +63,10 @@ export default function user_chat_bubble({username,user_prompt,time, file_meta_d
                     }}
                 >{JSON.parse(user_prompt)}</ReactMarkdown>
             </div>
-            <p className='pr-1 sm:text-sm text-neutral-400 text-right'>{new Date(time).toLocaleTimeString()}</p>
+            <div className={'flex flex-row gap-2 w-full items-center text-neutral-400  justify-end'}>
+                { !(file_meta_data.length>0) ? <button className={'hover:text-neutral-100'} onClick={onEdit}>  <PenLine size={14} /></button>:<></>}
+                <p className='pr-1 sm:text-sm text-neutral-400 text-right'>{new Date(time).toLocaleTimeString()}</p>
+            </div>
         </div>
     )
 }

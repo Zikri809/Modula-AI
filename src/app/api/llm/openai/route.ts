@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
             { text: open_ai_responses.choices[0].message.content }
         );
 
-        await db_updates(
+        const message_id = await db_updates(
             memory_extraction,
             `<convo> user: ${query} || llm_response: ${open_ai_responses.choices[0].message.content} </convo>`,
             uid as string,
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
             open_ai_responses.choices[0].message.content ?? '',
             file_meta_data,
             ocr_response,
-            'deepseek/deepseek-chat-v3.1:free'
+            'Deepseek-V3.1'
         );
 
         console.log(
@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 response: open_ai_responses.choices[0].message.content ?? null,
+                message_id: message_id,
                 confidence_level: lowest_confidence,
                 meta_data: JSON.parse(memory_extraction.text as string),
             },

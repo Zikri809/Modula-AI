@@ -1,24 +1,35 @@
-import createClient from '@/utils/supabase/server';
-export default async function delete_message(message_id: string) {
-    //even though in db its bigint which is a number it exceeds js max int
-    //thus the db will send it in string and can pass it back in string
-    //if we really need use Bigint()
+import createClient from "@/utils/supabase/server";
+import delete_from_storage from "@/Firebase/Utilities/delete_from_storage";
 
-    if (!message_id) throw new Error('missing message_id in params');
 
-    const supabase = await createClient();
+export default async function edit_past(message_id: string, chat_id: string) {
+    const supabase = await createClient()
+    //get the files contain by messages
+    const {data:message_object, error} = await supabase
+        .from('messages')
+        .select(
+            'file_meta_data (storage_ref)'
+        )
+        .gte('message_id', message_id).eq('chat_id', chat_id)
+    if(error) throw error;
+    //destructured
+    const refs_to_delete:string[] = message_object.map((element) => {
+        if(element.file_meta_data.length>0) return element.file_meta_data[0].storage_ref
+    }).filter(Boolean);
+    console.table(refs_to_delete)
 
-    try {
-        const db = await supabase
-            .from('messages')
-            .delete()
-            .eq('message_id', message_id);
-        if (db.error)
-            throw new Error(
-                `failed to delete message ${db.error.message} hint is ${db.error.hint}`
-            );
-        return true;
-    } catch (err) {
-        throw err;
-    }
+    //delete messages
+    const{error:delete_error} = await supabase.from('messages').delete().gte('message_id', message_id).eq('chat_id', chat_id)
+    if(delete_error) throw delete_error;
+    const failed_to_delete:string[] = []
+    Promise.all(refs_to_delete.map((ref) => {
+        delete_from_storage(ref).catch((e) =>{
+            console.error(e)
+            failed_to_delete.push(ref)
+        });
+    }))
+
+    console.table(failed_to_delete)
+
+    return refs_to_delete;
 }

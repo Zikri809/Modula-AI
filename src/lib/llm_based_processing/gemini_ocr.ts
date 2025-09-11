@@ -103,7 +103,7 @@ export default async function (files: File[], uid: string) {
             file_meta_data[index].confidence_level =
                 gemini_response_json.response[index].confidence_level;
         }
-        console.log(file_meta_data);
+        //console.log(file_meta_data);
         return {
             response: gemini_response_json.response,
             file_meta_data: file_meta_data,
