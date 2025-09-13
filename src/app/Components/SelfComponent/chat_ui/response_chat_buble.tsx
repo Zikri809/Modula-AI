@@ -11,7 +11,7 @@ export default function response_chat_buble({llm_model, llm_response, time, stat
     return(
         <div className='text-sm sm:text-base flex flex-col gap-2  bg-black broder-b-1 border-neutral-500 h-fit w-full text-white'>
             <p className='pr-1 text-left bg-blcak text-white'>{llm_model}</p>
-            <div className='text-left  px-4 space-y-4 space-x-5 bg-neutral-800 w-fit max-w-full rounded-md p-2 self-start' >
+            <div className={`text-left  px-4 space-y-4 space-x-5 bg-neutral-800 ${state=='loading'? 'w-fit':'w-full'} rounded-md p-2 self-start`} >
                 {state == 'loading' ? <Llm_waiting_animation/> :
                     <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkMath]}

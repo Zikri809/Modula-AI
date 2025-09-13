@@ -39,11 +39,11 @@ export default async function update_user(
                 for (const element of user_details) {
                     read_data?.user_details.push(element);
                 }
-            } else {
+            }
+            else {
                 for (const element of user_details) {
                     if (read_data?.user_details.includes(element)) {
-                        const index_to_remove =
-                            read_data.user_details.indexOf(element);
+                        const index_to_remove = read_data.user_details.indexOf(element);
                         read_data.user_details.splice(index_to_remove, 1);
                     }
                 }

@@ -6,7 +6,7 @@ import {EditMessage, Message, SendMessage} from "@/app/Types/chat_types/chat_typ
 import {useMutation, useQuery} from '@tanstack/react-query'
 import Chat_input from "@/app/Components/SelfComponent/chat_ui/chat_input";
 import {useQueryClient} from "@tanstack/react-query";
-import {Toaster} from "sonner";
+import {toast, Toaster} from "sonner";
 import {Loader} from "lucide-react";
 import Chat_navbar from "@/app/Components/SelfComponent/chat_ui/Chat_navbar";
 import {useRouter, useSearchParams} from "next/navigation";
@@ -39,6 +39,12 @@ export default function Chat(){
                 method: "POST",
                 body: formdata,
             })
+            if(!result.ok){
+                if(result.status === 402){
+                    toast.error('You have exceeded the credit limit or file upload.');
+                }
+                const error = new Error( 'Error Occurred Please try again later by refreshing this page');
+            }
             return result.json()
         },
         onSuccess: async (api_response) => {
@@ -52,12 +58,12 @@ export default function Chat(){
         }
             )
         },
-        onError: async () => {
+        onError: async (error) => {
             queryClient.setQueryData(['message',chat_id],(old_data: Message[])=>{
                     setIsSending(false)
                     return old_data.map((message_obj)=>(
                         message_obj.status == 'loading' ? (
-                            {...message_obj, status: 'error' }
+                            {...message_obj,message: JSON.stringify(error.message), status: 'error' }
                         ) : message_obj
                     ))
         }
@@ -131,7 +137,7 @@ export default function Chat(){
     return (
         <AppSidebar chat_id={chat_id as string}>
 
-            <div className={`relative w-full min-h-screen  flex flex-col items-center justify-center`}>
+            <div className={`relative w-full min-h-screen pt-0 m-0  flex flex-col items-center justify-center`}>
                 <Toaster className={'z-100'}  position="top-right"/>
 
                 {!isLoading && !isError && chat_id ?(

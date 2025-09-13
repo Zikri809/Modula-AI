@@ -7,6 +7,7 @@ import update_user from '@/lib/supabase_helper/user/update_user';
 import updateChat from '@/lib/supabase_helper/chat/update_chat';
 import create_message from '@/lib/supabase_helper/message/create_message';
 import create_file_metadata from '@/lib/supabase_helper/file meta data/create_file_metadata';
+import update_credit_upload from "@/lib/supabase_helper/user/update_credit_upload";
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
 const gemini = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -91,6 +92,15 @@ export default async function (
                 file_meta_data
             );
         }
+
+        await update_credit_upload({
+            credit_type: "subtract",
+            credit_value: total_cost,
+            uid: uid as string,
+            upload_type: "subtract",
+            upload_value: file_meta_data.length ?? 0,
+        })
+
         return db_create_message;
     } catch (error) {
         throw error;

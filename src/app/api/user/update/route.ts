@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import verifyJWT from '@/lib/jwt/verifyJWT';
 import { JWTPayload } from 'jose';
 import update_user from '@/lib/supabase_helper/user/update_user';
-import { updateUser } from 'rc9';
 
 export async function PATCH(request: NextRequest) {
     //middleware already check the existance of the api_token no need for discrete checks

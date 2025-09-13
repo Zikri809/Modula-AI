@@ -13,6 +13,7 @@ import {
 import get_request_data from '@/lib/open_router/get_request_data';
 import memory_extractor from '@/lib/llm_based_processing/memory_extractor';
 import db_updates from '@/lib/openai/db_updates';
+import Verify_credit_upload from "@/lib/supabase_helper/user/verify_credit_upload";
 
 const openai = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
@@ -47,6 +48,8 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll('file') as File[];
     const query = formData.get('query') as string | null;
     let confidence_level: number | null = null;
+
+    await Verify_credit_upload(uid as string, files.length)
 
     try {
         const { file_meta_data, ocr_response } = await gemini_ocr(

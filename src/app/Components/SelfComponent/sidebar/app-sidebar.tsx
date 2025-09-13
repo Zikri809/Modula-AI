@@ -12,6 +12,7 @@ import {Chats} from "@/app/Types/chat_types/chat_types";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 import {keepPreviousData} from "@tanstack/query-core";
+import Profile_popover from "@/app/Components/SelfComponent/chat_ui/Profile_popover";
 
 const sideBarMenuSkeleton = [
     <SidebarMenuSkeleton key={1}/>,
@@ -96,8 +97,7 @@ export function AppSidebar(
                     </SidebarGroup>
                 </SidebarContent>
                 <SidebarFooter className={'border-none  p-4 bg-black text-white flex flex-row gap-2 items-center'}>
-                    <SidebarMenuButton className={'bg-black h-full w-full hover:bg-neutral-800 hover:text-white'}><Settings size={20}/> Settings/Profile
-                    </SidebarMenuButton>
+                    <Profile_popover/>
                 </SidebarFooter>
             </Sidebar>
 

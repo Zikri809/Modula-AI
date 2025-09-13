@@ -15,6 +15,10 @@ import memory_extractor from '@/lib/llm_based_processing/memory_extractor';
 import citation_builder from '@/lib/citation_builder/citation_builder';
 import gemini_ocr from '@/lib/llm_based_processing/gemini_ocr';
 import {next} from "effect/Cron";
+import read_credit_upload from "@/lib/supabase_helper/user/read_credit_upload";
+import Verify_credit_upload from "@/lib/supabase_helper/user/verify_credit_upload";
+import Update_credit_upload from "@/lib/supabase_helper/user/update_credit_upload";
+import update_credit_upload from "@/lib/supabase_helper/user/update_credit_upload";
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
 const gemini = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -32,9 +36,14 @@ export async function POST(request: NextRequest) {
     const JWT_token_payload = (await verifyJWT(api_token)) as JWTPayload;
     const { uid } = JWT_token_payload;
 
+
+
     const formData = await request.formData();
     const files = formData.getAll('file') as File[];
     const query = formData.get('query') as string | null;
+
+    await Verify_credit_upload(uid as string, files.length)
+
 
     //file uploads block
     const { uploaded_files, file_meta_data, ocr_response } = await gemini_ocr(
@@ -178,6 +187,16 @@ async function db_updates(
             'Gemini-2.0 Flash'
         );
         //optional
+       console.log('file meta data',file_meta_data)
+         await update_credit_upload({
+             credit_type: "subtract",
+             credit_value: total_cost,
+             uid: uid as string,
+             upload_type: "subtract",
+             upload_value: file_meta_data.length ?? 0,
+         })
+
+
         if (file_meta_data.length > 0) {
             await create_file_metadata(
                 chat_id,
@@ -190,6 +209,10 @@ async function db_updates(
         throw error;
     }
 }
+
+
+
+
 /*
 testing
 

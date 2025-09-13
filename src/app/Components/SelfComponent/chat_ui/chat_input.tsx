@@ -148,8 +148,8 @@ export default function chat_input({isSending, sendToParent, className,editObjec
                 {
                     file?.map((item,index) => (
                         <div key={index} className={' flex flex-row gap-1 flex-1 min-w-40 bg-neutral-800 p-3 rounded-2xl items-center  h-fit w-fit'}>
-                            <FileIcon  className={'flex-shrink-0 h-10 w-10'}/>
-                            <div className={'text-sm w-full'}>
+                            <FileIcon  className={'shrink-0 h-10 w-10'}/>
+                            <div className={'text-sm w-full flex-col flex overflow-hidden'}>
                                 <div className={'flex flex-row  items-center w-full justify-between'}>
                                     <p className=' text-ellipsis w-full line-clamp-1'>{item.file_name}</p>
                                     <Button size={"icon"}
