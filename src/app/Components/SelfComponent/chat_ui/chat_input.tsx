@@ -21,12 +21,30 @@ import {Command, CommandItem, CommandList} from "@/components/ui/command";
 const model_combo_box_list =[
     {
         value: "deepseek/deepseek-chat-v3.1:free",
+        api_url:  'api/llm/openai?',
         label: 'Deepseek-V3.1',
+        sdk: 'openai',
     },
     {
         value: "gemini-2.0-flash",
+        api_url: 'api/llm/gemini?gemini_model=gemini-2.0-flash',
         label: 'Gemini-2.0 Flash',
+        sdk: 'gemini',
+    },
+    {
+        value: "gemini-2.5-flash",
+        api_url: 'api/llm/gemini?gemini_model=gemini-2.5-flash',
+        label: 'Gemini-2.5 Flash',
+        sdk: 'gemini',
+
+    },
+    {
+        value: "gemini-2.5-pro",
+        api_url: 'api/llm/gemini?gemini_model=gemini-2.5-pro',
+        label: 'Gemini-2.5 Pro',
+        sdk: 'gemini',
     }
+
 ]
 type chat_input = React.HTMLAttributes<HTMLDivElement> & {
     isSending:boolean,
@@ -91,23 +109,23 @@ export default function chat_input({isSending, sendToParent, className,editObjec
                 return value.file
             }
         ) ?? []
+        const base_object = model_popover_value ? model_combo_box_list[model_combo_box_list.findIndex(element => element.value == model_popover_value)] : model_combo_box_list[1]
         let api_url = ''
-        if(model_popover_value == 'deepseek/deepseek-chat-v3.1:free' ){
-            api_url = 'api/llm/openai'
-        }
-        else if(model_popover_value == 'gemini-2.0-flash'){
-            api_url = 'api/llm/gemini-2.0-flash'
+        if(base_object.sdk == 'openai'){
+            api_url = base_object.api_url + `reasoning=${reasoning}`+`&web_search=${web_search}`+`&llm=${base_object.label}`
         }
         else{
-            api_url = 'api/llm/gemini-2.0-flash'
+            api_url = base_object.api_url + `&reasoning=${reasoning}`+`&llm=${base_object.label}`
         }
+
+
         const MessageObject:SendMessage = {
             file:files,
             prompt: JSON.stringify(input_text),
             web_search: web_search,
             reasoning: reasoning,
-            llm: model_popover_value ? model_combo_box_list[model_combo_box_list.findIndex(element => element.value == model_popover_value)].label : 'Gemini-2.0 Flash' ,
-            api_url: api_url,
+            llm: base_object.label,
+            api_url:api_url,
         }
         //reset back
         setInput_text('')

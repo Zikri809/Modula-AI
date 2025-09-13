@@ -13,12 +13,15 @@ import {useRouter, useSearchParams} from "next/navigation";
 import {AppSidebar} from "@/app/Components/SelfComponent/sidebar/app-sidebar";
 import {Button} from "@/components/ui/button";
 import Greetings_component from "@/app/Components/SelfComponent/chat_ui/Greetings_component";
+import {useAuthState} from "react-firebase-hooks/auth";
+import {auth} from "@/Firebase/config";
 
 
 export default function Chat(){
     const [sendMessage, SetSendMessage] = useState<SendMessage>();
     const [isSending, setIsSending] = useState<boolean>(false);
     const [rerender_navbar_key, SetRerenderNavbar_key] = useState<string>(crypto.randomUUID());
+    const [user, loading, error] = useAuthState(auth);
     const [edit, setEdit] = useState<EditMessage>({isEditing: false});
     const queryClient = useQueryClient();
     
@@ -35,7 +38,7 @@ export default function Chat(){
                     formdata.append('file',file);
                 }
             }
-            const result = await fetch(`${message.api_url}?chat_id=${chat_id}`,{
+            const result = await fetch(`${message.api_url}&chat_id=${chat_id}`,{
                 method: "POST",
                 body: formdata,
             })
@@ -147,7 +150,7 @@ export default function Chat(){
                             {
                                 (message as Message[]).length > 0?(message?.map(({ message_id, role, message, created_at, file_meta_data, status}: Message, index) => {
                                     if (role === "user") {
-                                        return <User_chat_bubble key={index} username={role} user_prompt={message}
+                                        return <User_chat_bubble key={index} username={ user?.displayName ?? 'User'} user_prompt={message}
                                                                  time={created_at}
                                                                  message_id={message_id as number}
                                                                  file_meta_data={file_meta_data ?? []}

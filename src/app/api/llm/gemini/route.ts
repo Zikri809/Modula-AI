@@ -14,10 +14,9 @@ import { JWTPayload } from 'jose';
 import memory_extractor from '@/lib/llm_based_processing/memory_extractor';
 import citation_builder from '@/lib/citation_builder/citation_builder';
 import gemini_ocr from '@/lib/llm_based_processing/gemini_ocr';
-import {next} from "effect/Cron";
-import read_credit_upload from "@/lib/supabase_helper/user/read_credit_upload";
+
 import Verify_credit_upload from "@/lib/supabase_helper/user/verify_credit_upload";
-import Update_credit_upload from "@/lib/supabase_helper/user/update_credit_upload";
+
 import update_credit_upload from "@/lib/supabase_helper/user/update_credit_upload";
 
 const GEMINI_API_KEY = process.env.GEMINI_API;
@@ -26,9 +25,11 @@ const gemini = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 export async function POST(request: NextRequest) {
     const url = new URL(request.url);
     const chat_id = url.searchParams.get('chat_id');
-    if (!chat_id)
+    const gemini_model = url.searchParams.get('gemini_model');
+    const llm_model = url.searchParams.get('llm');
+    if (!chat_id || !gemini_model || !llm_model )
         return NextResponse.json(
-            { message: 'missing chat_id in the params ' },
+            { message: 'missing chat_id or gemini model or llm  in the params ' },
             { status: 400 }
         );
     //auth layer
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
         ];
         console.log('generating content on gemini api')
         const response = await gemini.models.generateContent({
-            model: 'gemini-2.0-flash-001',
+            model: gemini_model,
             contents: [{ role: 'user', parts: contentBlock }],
             config: {
                 tools: [ { googleSearch: {} }],
@@ -93,7 +94,8 @@ export async function POST(request: NextRequest) {
             response,
             query,
             file_meta_data,
-            ocr_response
+            ocr_response,
+            llm_model
         );
 
         return NextResponse.json(
@@ -125,7 +127,8 @@ async function db_updates(
     response: GenerateContentResponse,
     query: string | null,
     file_meta_data: any,
-    ocr_response: GenerateContentResponse | undefined
+    ocr_response: GenerateContentResponse | undefined,
+    llm: string
 ) {
     const { title, user_details }: { title: string; user_details: string[] } =
         JSON.parse(memory_response.text as string);
@@ -184,7 +187,7 @@ async function db_updates(
                     ?.candidatesTokenCount as number) +
                 (ocr_response?.usageMetadata?.candidatesTokenCount ?? 0),
             total_cost,
-            'Gemini-2.0 Flash'
+            llm
         );
         //optional
        console.log('file meta data',file_meta_data)

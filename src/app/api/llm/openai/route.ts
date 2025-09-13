@@ -24,9 +24,10 @@ export async function POST(request: NextRequest) {
     const url = new URL(request.url);
     const chat_id = url.searchParams.get('chat_id');
     const web_search = url.searchParams.get('web_search') === 'true';
-    if (!chat_id)
+    const llm_model = url.searchParams.get('llm');
+    if (!chat_id || !llm_model)
         return NextResponse.json(
-            { message: 'missing chat_id in the params ' },
+            { message: 'missing chat_id or llm in the params ' },
             { status: 400 }
         );
 
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
             open_ai_responses.choices[0].message.content ?? '',
             file_meta_data,
             ocr_response,
-            'Deepseek-V3.1'
+            llm_model,
         );
 
         console.log(
