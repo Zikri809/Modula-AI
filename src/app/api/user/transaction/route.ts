@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         const { data, error } = await supabse
             .from('messages')
             .select(
-                'total_input_tokens,response_tokens,total_cost,llm_model, Chats!inner(uid,chat_title)'
+                'created_at,total_input_tokens,response_tokens,total_cost,llm_model, Chats!inner(chat_title)'
             )
             .eq('Chats.uid', uid)
             .order('created_at', { ascending: false })

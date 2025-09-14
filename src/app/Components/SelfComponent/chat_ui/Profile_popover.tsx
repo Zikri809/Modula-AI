@@ -22,6 +22,7 @@ import ShowMemory from "@/app/Components/SelfComponent/chat_ui/Dialog_content/Me
 import ErrorDialog from "@/app/Components/SelfComponent/chat_ui/Dialog_content/ErrorDialog";
 import LogOutDialog from "@/app/Components/SelfComponent/chat_ui/Dialog_content/LogOutDialog.";
 import About_dev from "@/app/Components/SelfComponent/chat_ui/Dialog_content/About_dev";
+import Usage_dialog from "@/app/Components/SelfComponent/chat_ui/Dialog_content/Usage_dialog";
 
 
 
@@ -60,7 +61,7 @@ export default function Profile_popover(){
                             <BrainIcon className={'text-white'}/> System Memory
                         </DropdownMenuItem>
                     </DialogTrigger>
-                    <DialogTrigger >
+                    <DialogTrigger onClick={()=>setDialogState('usage')} >
                         <DropdownMenuItem className={'text-white data-[highlighted]:bg-neutral-600 data-[highlighted]:text-white'}>
                             <CircleDollarSign className={'text-white'}/> Limits and usage
                         </DropdownMenuItem>
@@ -88,6 +89,9 @@ export default function Profile_popover(){
                     }
                     {
                         dialogState == 'about_dev' && <About_dev/>
+                    }
+                    {
+                        dialogState == 'usage' && <Usage_dialog/>
                     }
                 </DialogContent>
             </DropdownMenu>
