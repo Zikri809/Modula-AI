@@ -24,9 +24,10 @@ export default function Home() {
                 style={{ width: '100%', height: '100%', position: 'absolute' }}
             >
                 <Dither
+                    
                     waveColor={[0.5, 0.5, 0.5]}
-                    disableAnimation={false}
-                    enableMouseInteraction={true}
+                    disableAnimation={true}
+                    enableMouseInteraction={false}
                     mouseRadius={0.3}
                     colorNum={4}
                     waveAmplitude={0.3}
