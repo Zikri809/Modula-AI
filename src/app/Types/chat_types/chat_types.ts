@@ -39,6 +39,7 @@ type SendMessage = {
      message_id_editing?: number
     prompt?:string,
  }
+
 export type {
     SendMessage,
     User_message_bubble,

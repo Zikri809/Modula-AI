@@ -1,4 +1,4 @@
-'use client'
+
 import {useEffect, useRef, useState} from "react";
 import {DialogDescription, DialogTitle} from "@/components/ui/dialog";
 import {Loader2Icon, Trash2} from "lucide-react";

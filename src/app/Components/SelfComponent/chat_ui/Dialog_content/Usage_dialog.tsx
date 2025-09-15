@@ -1,5 +1,5 @@
 import {DialogTitle} from "@/components/ui/dialog";
-import {useEffect, useState} from "react";
+import { useEffect, useState} from "react";
 import Transaction_card from "@/app/Components/SelfComponent/chat_ui/Dialog_content/Transaction_card";
 import { Loader2Icon} from "lucide-react";
 import { Badge } from "@/components/ui/badge"
