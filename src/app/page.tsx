@@ -23,10 +23,10 @@ export default function Home() {
     }
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-black">
+        <div className="flex flex-col h-full overflow-hidden bg-white ">
             <div
-                className=""
-                style={{ width: '100%', height: '100%', position: 'absolute' }}
+                className="h-full w-full"
+                style={{  position: 'absolute' }}
             >
 
                 <Dither

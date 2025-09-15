@@ -20,7 +20,6 @@ import {auth} from "@/Firebase/config";
 export default function Chat(){
     const [sendMessage, SetSendMessage] = useState<SendMessage>();
     const [isSending, setIsSending] = useState<boolean>(false);
-    const [rerender_navbar_key, SetRerenderNavbar_key] = useState<string>(crypto.randomUUID());
     const [user, loading, error] = useAuthState(auth);
     const [edit, setEdit] = useState<EditMessage>({isEditing: false});
     const queryClient = useQueryClient();
@@ -46,7 +45,7 @@ export default function Chat(){
                 if(result.status === 402){
                     toast.error('You have exceeded the credit limit or file upload.');
                 }
-                const error = new Error( 'Error Occurred Please try again later by refreshing this page');
+                throw new Error( 'Error Occurred Please try again later by refreshing this page');
             }
             return result.json()
         },
@@ -146,7 +145,7 @@ export default function Chat(){
                 {!isLoading && !isError && chat_id ?(
                     <>
                         <Chat_navbar  chat_id={chat_id} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
-                        <div  className='p-4 w-full min-h-[76dvh] h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
+                        <div  className='p-4 w-full min-h-[calc(100%-124px-60px)] h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
                             {
                                 (message as Message[]).length > 0?(message?.map(({ message_id, role, message, created_at, file_meta_data, status}: Message, index) => {
                                     if (role === "user") {

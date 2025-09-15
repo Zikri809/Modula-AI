@@ -1,7 +1,7 @@
 "use client";
 import {Textarea} from "@/components/ui/textarea";
 import {
-    BrainCircuit,
+    BrainCircuit, CheckIcon,
     ChevronsUpDown,
     File as FileIcon,
     Globe,
@@ -183,10 +183,12 @@ export default function chat_input({isSending, sendToParent, className,editObjec
                     </Button>
                     <Popover open={model_popover_open} onOpenChange={setModelPopoverOpen}>
                         <PopoverTrigger asChild className={'text-white '}>
-                            <Button className={`shrink text-xs sm:text-base  text-ellipsis  sm:max-w-fit hover:bg-neutral-500  items-center  ${model_popover_value ? 'bg-blue-700 line-clamp-1': 'bg-neutral-800'}`}>
+                            <Button className={`flex-row flex gap-2 shrink text-xs sm:text-base  text-ellipsis  sm:max-w-fit hover:bg-neutral-500  items-center  ${model_popover_value ? 'bg-blue-700 line-clamp-1': 'bg-neutral-800'}`}>
+
                                 {model_popover_value ?
-                                    model_combo_box_list.find((value) => value.value === model_popover_value)?.label
-                                    : 'LLM ...'} {!model_popover_value && <ChevronsUpDown className="opacity-50" />}
+                                    model_combo_box_list.find((object) => object.value === model_popover_value)?.label
+                                    : 'LLM'}
+                                {!model_popover_value && <ChevronsUpDown className="opacity-50" />}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className={'bg-neutral-800 mr-6 border-0'}>
@@ -200,9 +202,18 @@ export default function chat_input({isSending, sendToParent, className,editObjec
                                                     onSelect={(currentValue) => {setModelPopover_value(currentValue === model_popover_value ? "" : currentValue)
                                                     setModelPopoverOpen(false)
                                                     }}
-                                                    className={'text-xs flx flex-row items-center gap-2 sm:text-base p-2 text-center text-white w-full bg-neutral-800'}
+                                                    className={`text-xs flx flex-row items-center justify-between sm:text-base p-2 text-center text-white w-full bg-neutral-800 `}
 
-                                                >{item.icon} {item.label}
+                                                >
+                                                    <div className={'flex flex-row items-center gap-2'}>
+                                                        {item.icon} {item.label}
+                                                    </div>
+                                                    <CheckIcon
+                                                        className={`
+                                                            "mr-2 h-4 w-4"
+                                                            ${model_popover_value === item.value  ? "opacity-100" : "opacity-0"}
+                                                        `}
+                                                    />
                                                 </CommandItem>
                                             ))
                                         }
@@ -213,8 +224,8 @@ export default function chat_input({isSending, sendToParent, className,editObjec
 
                 </div>
                 <Button onClick={onClickSend} disabled={isSending} className={'ml-2 hover:bg-neutral-500 bg-neutral-700'}>
-                    {isSending && <Loader2Icon className="animate-spin"/>}
-                    <Send /></Button>
+                    <Send />
+                </Button>
             </div>
         </div>
     )

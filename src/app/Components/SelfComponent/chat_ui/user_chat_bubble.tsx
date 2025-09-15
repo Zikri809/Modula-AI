@@ -36,7 +36,7 @@ export default function user_chat_bubble({message_id, username,user_prompt,time,
                     ))
                 }
             </div>
-            <div className='text-right px-4 text-sm sm:text-base bg-neutral-800 w-fit rounded-md p-2 self-end' >
+            <div className='text-left px-4 text-sm sm:text-base bg-neutral-800 w-fit rounded-md p-2 self-end' >
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm,remarkMath]}
                     rehypePlugins={[rehypeKatex]}

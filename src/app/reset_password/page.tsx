@@ -18,11 +18,11 @@ const Dither = dynamic(() => import('./Components/ReactBits/Dither/Dither'), {
 export default function reset_password() {
     const router = useRouter();
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-black">
+        <div className="flex flex-col h-full overflow-hidden bg-black">
             <Toaster richColors position="top-right" className="z-100" />
             <div
-                className=""
-                style={{ width: '100%', height: '100%', position: 'absolute' }}
+                className="h-screen w-screen"
+                style={{  position: 'absolute' }}
             >
                 <Dither
                     pixelSize={2}

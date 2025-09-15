@@ -15,6 +15,9 @@ const poppins = Poppins({
 export const metadata: Metadata = {
     title: 'Modula AI',
     description: 'Multi LLM Chatbot with personality',
+    other: {
+        'theme-color': '#000000'
+    }
 };
 
 
