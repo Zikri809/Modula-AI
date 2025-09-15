@@ -23,14 +23,15 @@ export default function reset_password() {
                 style={{ width: '100%', height: '100%', position: 'absolute' }}
             >
                 <Dither
+                    pixelSize={2}
                     waveColor={[0.5, 0.5, 0.5]}
-                    disableAnimation={true}
+                    disableAnimation={false}
                     enableMouseInteraction={false}
                     mouseRadius={0.3}
                     colorNum={4}
                     waveAmplitude={0.3}
                     waveFrequency={3}
-                    waveSpeed={0.05}
+                    waveSpeed={0.01}
                 />
             </div>
             <p className="z-2 p-4 text-2xl font-bold text-white">Modula AI</p>

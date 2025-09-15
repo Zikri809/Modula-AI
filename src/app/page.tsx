@@ -23,46 +23,25 @@ export default function Home() {
                 className=""
                 style={{ width: '100%', height: '100%', position: 'absolute' }}
             >
+
                 <Dither
-                    
+                    pixelSize={2}
                     waveColor={[0.5, 0.5, 0.5]}
-                    disableAnimation={true}
+                    disableAnimation={false}
                     enableMouseInteraction={false}
                     mouseRadius={0.3}
                     colorNum={4}
                     waveAmplitude={0.3}
                     waveFrequency={3}
-                    waveSpeed={0.05}
+                    waveSpeed={0.01}
                 />
+
+
             </div>
             <p className="z-2 p-4 text-2xl font-bold text-white">Modula AI</p>
             <div className=" z-2 p-4  h-full  flex flex-col gap-2 items-center justify-center ">
-                <SplitText
-                    text="Your multi-model private AI chatroom."
-                    className="text-4xl font-bold text-center break-normal text-white"
-                    delay={100}
-                    duration={2}
-                    ease="elastic.out(1,0.3)"
-                    splitType="chars"
-                    from={{ opacity: 0, y: 40 }}
-                    to={{ opacity: 1, y: 0 }}
-                    threshold={0.1}
-                    rootMargin="-100px"
-                    textAlign="center"
-                />
-                <SplitText
-                    text="Multi-model, memory-aware, and built for the curious."
-                    className={`text-sm  font-semibold text-center break-normal text-white `}
-                    delay={500}
-                    duration={0.3}
-                    ease="power3.out"
-                    splitType="words"
-                    from={{ opacity: 0, y: 40 }}
-                    to={{ opacity: 1, y: 0 }}
-                    threshold={0.1}
-                    rootMargin="-100px"
-                    textAlign="center"
-                />
+                <p  className="text-4xl font-bold text-center break-normal text-white">Your multi-model private AI chatroom.</p>
+                <p  className={`text-sm  font-semibold text-center break-normal text-white `}>Multi-model, memory-aware, and built for the curious.</p>
 
                 <Button
                     onClick={toLoginPage}
