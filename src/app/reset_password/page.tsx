@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { Toaster } from 'sonner';
 import Reset_card from '../Components/SelfComponent/reset_password/resetCard';
 import { useRouter } from 'next/navigation';
+import {Suspense} from "react";
 
 const Dither = dynamic(
     () => import('@/app/Components/ReactBits/Dither/Dither'),
@@ -34,7 +35,10 @@ export default function reset_password() {
             </div>
             <p className="z-2 p-4 text-2xl font-bold text-white">Modula AI</p>
             <div className=" z-2 px-6 h-full flex flex-col gap-2 items-center justify-center ">
-                <Reset_card router={router} />
+                <Suspense fallback={null}>
+                    <Reset_card router={router} />
+
+                </Suspense>
             </div>
         </div>
     );

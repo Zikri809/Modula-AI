@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
 import refresh_token from '@/lib/refresh_token/refresh_token';
+import Google from "@/app/Components/SelfComponent/svg_icons/Google";
 
 export function LoginForm({
     className,
@@ -224,9 +225,9 @@ export function LoginForm({
                                 <Button
                                     onClick={sign_in_google}
                                     variant="outline"
-                                    className="w-full text-black hover:bg-neutral-400"
+                                    className="w-full text-black hover:bg-neutral-400 flex flex-row gap-2"
                                 >
-                                    Login with Google
+                                   <Google/> Login with Google
                                 </Button>
                             </div>
                         </div>

@@ -21,7 +21,7 @@ type props = {
     router: ReturnType<typeof useRouter>;
 };
 
-export default function Reset_card(props: props) {
+export default function Reset_card({router}: props) {
     //firebase will send the user registered email a link to reset the password
     const [email, SetEmail] = useState<string>('');
     const params: any = useSearchParams();
@@ -31,12 +31,13 @@ export default function Reset_card(props: props) {
     const [timer, Set_timer] = useState<number>(5);
 
     useEffect(() => {
+        if(!router) return
         const email = params.get('email');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email && emailRegex.test(email)) {
             SetEmail(email);
         }
-    }, [params]);
+    }, [router]);
     useEffect(() => {
         if (error) {
             toast.error(
@@ -57,7 +58,7 @@ export default function Reset_card(props: props) {
             );
             return;
         }
-        const router = props.router;
+
         await sendPasswordResetEmail(email);
         toast.success('Success! Email had been sent to ' + email);
         Set_timer_lock(true);
