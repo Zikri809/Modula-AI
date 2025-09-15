@@ -17,13 +17,13 @@ export default function refresh_token_component({
     const [user, loading, error] = useAuthState(auth);
     useEffect(() => {
         if(loading) return
-        if(!user) {
+        if(!user &&  !(current_pathname=='/' || current_pathname == '/login' || current_pathname == '/reset_password')) {
             //redirect to log in
-            router.push('/');
+            router.push('/login');
             return
         }
         refresh_token().then(result => setTokenGenerated(result));
-        if(current_pathname == '/' ){
+        if( user ){
             //if current path is / then redirect to chat page
             router.push('/chat')
             return
@@ -31,7 +31,7 @@ export default function refresh_token_component({
         const refresh_interval = setInterval(() => {
             refresh_token().then(result => {
                 if(!result) {
-                    router.push('/');
+                    router.push('/login');
                 }
             });
             }, 3300000);
@@ -39,5 +39,9 @@ export default function refresh_token_component({
             clearInterval(refresh_interval);
         };
     }, [user,loading]);
-    return <>{token_generated? children: <div className={'h-screen w-screen flex flex-col items-center justify-center'}><Loader2Icon className={'animate-spin '}/></div>}</>;
+    return(
+    <>{
+        token_generated || current_pathname=='/'  || current_pathname == '/login' || current_pathname == '/reset_password'? children:(
+            <div className={'h-screen w-screen flex flex-col items-center justify-center'}><Loader2Icon className={'animate-spin '}/></div>)
+    }</>);
 }

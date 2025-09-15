@@ -18,7 +18,6 @@ export const metadata: Metadata = {
 };
 
 
-const queryClient = new QueryClient();
 
 export default function RootLayout({
     children,
