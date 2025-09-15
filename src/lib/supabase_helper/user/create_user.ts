@@ -11,7 +11,7 @@ export default async function create_user(uid: string, email: string) {
             {
                 uid: uid,
                 email: email,
-                credit_remain: 0,
+                credit_remain: 2,
                 plan: 'free',
                 free_upload_remain: 3,
                 user_details: [],

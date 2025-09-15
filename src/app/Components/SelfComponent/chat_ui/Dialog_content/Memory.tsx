@@ -1,4 +1,4 @@
-
+'use client'
 import {useEffect, useRef, useState} from "react";
 import {DialogDescription, DialogTitle} from "@/components/ui/dialog";
 import {Loader2Icon, Trash2} from "lucide-react";
@@ -8,13 +8,20 @@ function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const delete_worker = new Worker('/workers/debounced_delete_user_details.js');
 
 export default function ShowMemory({setDialogState}: {
     setDialogState: (value: 'memory' | 'usage' | 'LogOut' | undefined | 'error') => void
 }) {
     const [user_details, SetUserDetails] = useState<string[]>()
     const [processing_delete, setProcessingDelete] = useState<boolean>(false)
+    const worker_ref = useRef<Worker | null>(null);
+
+    useEffect(() => {
+        if(worker_ref.current) return
+        if(typeof Worker == undefined)  return;
+        worker_ref.current =  new Worker('/workers/debounced_delete_user_details.js');
+    }, []);
+
     useEffect(() => {
         async function fetch_data() {
             const result = await fetch('api/user/find', {method: 'POST'})
@@ -37,7 +44,7 @@ export default function ShowMemory({setDialogState}: {
         //send to db a new one
         //await sleep(5000) simulate db processing
         SetUserDetails(modified)
-        delete_worker.postMessage(detail)
+        worker_ref.current?.postMessage(detail)
         setProcessingDelete(false)
 
 

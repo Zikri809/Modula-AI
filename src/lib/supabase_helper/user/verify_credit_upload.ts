@@ -4,13 +4,11 @@ import {NextResponse} from "next/server";
 
 export default async function (uid:string,file_arr_length:number){
     try{
-        const {credit_remain, free_upload_remain} = await  Read_credit_upload(uid)
+        const {credit_remain} = await  Read_credit_upload(uid)
         if (credit_remain <=0){
             return NextResponse.json({exceeded: true , message: 'No credit remain for your account.'},{status:402})
         }
-        if(free_upload_remain < file_arr_length){
-            return NextResponse.json({exceeded: true , message: 'No free upload remain for your account.'},{status:402})
-        }
+
     }
     catch(error){
         console.dir(error,{depth:10});
