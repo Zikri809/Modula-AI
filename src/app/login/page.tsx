@@ -4,13 +4,15 @@ import { LoginForm } from '@/components/login-form';
 import dynamic from 'next/dynamic';
 import { Toaster } from 'sonner';
 
-const Dither = dynamic(
-    () => import('@/app/Components/ReactBits/Dither/Dither'),
-    {
-        ssr: false,
-        loading: () => <p>Loading...</p>, // Optional loading component
-    }
-);
+import Dither from "@/app/Components/ReactBits/Dither/Dither";
+
+/*
+const Dither = dynamic(() => import('./Components/ReactBits/Dither/Dither'), {
+    ssr: false,
+    loading: () => <p>Loading...</p>, // Optional loading component
+});
+*/
+
 
 export default function login() {
     return (

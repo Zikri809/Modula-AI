@@ -5,13 +5,15 @@ import Reset_card from '../Components/SelfComponent/reset_password/resetCard';
 import { useRouter } from 'next/navigation';
 import {Suspense} from "react";
 
-const Dither = dynamic(
-    () => import('@/app/Components/ReactBits/Dither/Dither'),
-    {
-        ssr: false,
-        loading: () => <p>Loading...</p>, // Optional loading component
-    }
-);
+import Dither from "@/app/Components/ReactBits/Dither/Dither";
+
+/*
+const Dither = dynamic(() => import('./Components/ReactBits/Dither/Dither'), {
+    ssr: false,
+    loading: () => <p>Loading...</p>, // Optional loading component
+});
+*/
+
 
 export default function reset_password() {
     const router = useRouter();

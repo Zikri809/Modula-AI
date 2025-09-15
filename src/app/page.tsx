@@ -5,10 +5,15 @@ import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 
+import Dither from "@/app/Components/ReactBits/Dither/Dither";
+
+/*
 const Dither = dynamic(() => import('./Components/ReactBits/Dither/Dither'), {
     ssr: false,
     loading: () => <p>Loading...</p>, // Optional loading component
 });
+*/
+
 
 export default function Home() {
     const router = useRouter();
