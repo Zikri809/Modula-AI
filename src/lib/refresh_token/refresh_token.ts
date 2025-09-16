@@ -3,10 +3,10 @@ import {useRouter} from "next/navigation";
 import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 export default async function refresh_token() {
-    //console.log('user status ', auth.currentUser);
+    console.log('user status ', auth.currentUser);
         try {
             const token = await auth.currentUser?.getIdToken(true);
-            const token_gen = await fetch('/api/auth/token_gateway', {
+            const token_gen = await fetch('api/auth/token_gateway', {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,

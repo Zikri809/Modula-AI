@@ -7,7 +7,7 @@ export default async function create_user(uid: string, email: string) {
     const supabse = await createClient();
 
     try {
-        const db = await supabse.from('users').insert([
+        const db = await supabse.from('users').upsert([
             {
                 uid: uid,
                 email: email,
@@ -15,8 +15,8 @@ export default async function create_user(uid: string, email: string) {
                 plan: 'free',
                 free_upload_remain: 3,
                 user_details: [],
-            },
-        ]);
+            }
+        ],{onConflict:'uid', ignoreDuplicates: true});
         if (db.error) throw db.error;
         return true;
     } catch (err) {

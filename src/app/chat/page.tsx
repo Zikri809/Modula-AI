@@ -145,7 +145,7 @@ export default function Chat(){
                 {!isLoading && !isError && chat_id ?(
                     <>
                         <Chat_navbar  chat_id={chat_id} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
-                        <div  className='p-4 w-full min-h-[calc(100%-124px-60px)] h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
+                        <div  className='p-4 w-full min-h-[calc(100dvh-124px-60px)] h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
                             {
                                 (message as Message[]).length > 0?(message?.map(({ message_id, role, message, created_at, file_meta_data, status}: Message, index) => {
                                     if (role === "user") {

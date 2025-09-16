@@ -1,28 +1,24 @@
 import { auth } from '@/Firebase/config';
-import { fetchSignInMethodsForEmail } from 'firebase/auth';
+import {fetchSignInMethodsForEmail, signInWithEmailAndPassword} from 'firebase/auth';
 import { toast } from 'sonner';
 
-export default async function (email: string): Promise<boolean> {
+export default async function (email: string, password:string): Promise<boolean> {
     try {
-        const user_signIn_method = await fetchSignInMethodsForEmail(
-            auth,
-            email
-        );
-
-        //if length is <=0 then no methods
-        if (user_signIn_method.length < 0 || !user_signIn_method) {
-            console.log('entering the not registered block');
-            return false;
-        } else if (user_signIn_method.includes('password')) {
-            return true;
-        } else if (user_signIn_method.includes('google.com')) {
-            toast.success('Already Sign up using google');
-            return false;
-        } else {
-            return true;
-        }
+        // Try signing in with a dummy password to check if user exists
+        await signInWithEmailAndPassword(auth, email, password);
+        return true; // This shouldn't happen
     } catch (error: any) {
-        console.log('error occured fetching the details');
-        return false;
+        console.log('Auth check error code:', error.code);
+
+        if (error.code === 'auth/wrong-password' ||
+            error.code === 'auth/too-many-requests' ||
+            error.code === 'auth/invalid-credential') {
+            return true; // User exists!
+        } else if (error.code === 'auth/user-not-found') {
+            return false; // User doesn't exist
+        } else {
+            console.log('Unknown auth error:', error);
+            return false; // Default to false for safety
+        }
     }
 }

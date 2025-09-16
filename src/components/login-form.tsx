@@ -22,7 +22,7 @@ import {
 } from 'react-firebase-hooks/auth';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
+import {EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword} from 'firebase/auth';
 import refresh_token from '@/lib/refresh_token/refresh_token';
 import Google from "@/app/Components/SelfComponent/svg_icons/Google";
 
@@ -50,17 +50,19 @@ export function LoginForm({
 
     async function create_user() {
         try {
-            const result = await fetch(`/api/user/create`, {
+            await refresh_token();
+            const result = await fetch(`api/user/create`, {
                 method: 'POST',
             });
             const result_json = await result.json();
+            console.log(result_json);
             return result_json;
         } catch (error) {
             console.log(error);
             return null;
         }
     }
-
+    /*
     async function merge_account(email: string, password: string) {
         const google_sign_in = await signInWithGoogle();
         const credential = EmailAuthProvider.credential(email, password);
@@ -76,77 +78,93 @@ export function LoginForm({
         }
         toast.error('Failed to sign in with google ');
     }
+     */
 
     useEffect(() => {
-        if (google_error) {
-            if (
-                google_error.code ==
-                'auth/account-exists-with-different-credential'
-            ) {
-                toast.error('Please Sign In using your email and Password');
-                return;
+        const handler = async () => {
+
+            if (google_error) {
+                if (
+                    google_error.code ==
+                    'auth/account-exists-with-different-credential'
+                ) {
+                    toast.error('Please Sign In using your email and Password');
+                    return;
+                }
+                toast.error(
+                    'Oh oh! Something went wrong try again in few seconds ' +
+                        google_error
+                );
             }
-            toast.error(
-                'Oh oh! Something went wrong try again in few seconds ' +
-                    google_error
-            );
+            if (google_user) {
+
+                await create_user();
+                toast.success('Sign In successful redirecting ... ');
+
+            }
         }
-        if (google_user) {
-            refresh_token();
-            create_user();
-            toast.success('Sign In successful redirecting ... ');
-            setTimeout(() => {
-                router.push('/chat');
-            }, 1500);
-        }
+        handler()
     }, [google_error, google_user]);
 
     useEffect(() => {
-        if (signup_user) {
-            refresh_token();
-            create_user();
-            toast.success('Sign up Successful redirecting ...');
-            setTimeout(() => {
-                router.push('/chat');
-            }, 1500);
-        }
-        if (signup_error) {
-            if (signup_error.code == 'auth/email-already-in-use') {
-                merge_account(email, password);
-                return;
+        const handler = async () => {
+
+            if (signup_user) {
+                await create_user();
+                toast.success('Sign up Successful redirecting ...');
+
             }
-            toast.error(
-                'Oh oh! Something went wrong signing up, try again in few seconds ' +
-                    signup_error
-            );
+            if (signup_error) {
+                if (signup_error.code == 'auth/email-already-in-use') {
+                    toast.error('Account Exist ! Try checking your password or Sign In using Google.');
+                }
+                else if (signup_error.code === 'auth/account-exists-with-different-credential') {
+                    // User exists but signed up with Google/other provider
+                    toast.error('This email is registered with Google. Please use "Sign in with Google" instead.');
+
+                }
+                else{
+                    toast.error(
+                        'Oh oh! Something went wrong signing up, try again in few seconds ' +
+                            signup_error
+                    );
+
+                }
+            }
         }
+        handler();
     }, [signup_user, signup_error]);
 
     useEffect(() => {
-        if (signIn_user) {
-            toast.success('Sign in Successful redirecting ...');
-            setTimeout(() => {
-                router.push('/chat');
-            }, 1500);
+        const handler = async () => {
+
+            if (signIn_user) {
+                await create_user();
+                toast.success('Sign in Successful redirecting ...');
+
+            }
+            if (signIn_error) {
+                console.log('sign in error',signIn_error);
+                if (    signIn_error.code === 'auth/invalid-credential'){
+                    createUserWithEmailAndPassword(email, password);
+                }
+
+
+                else{
+                    toast.error(
+                        'Oh oh! Unexpected error, try signing in, again in few seconds ' +
+                        signIn_error
+                    );
+                }
+            }
         }
-        if (signIn_error) {
-            toast.error(
-                'Oh oh! Something went wrong try signing in, again in few seconds ' +
-                    signIn_error
-            );
-        }
+        handler();
     }, [signIn_user, signIn_error]);
 
     async function login() {
-        const isRegistered = await checkEmailRegistered(email);
-        console.log('isRegistered ', isRegistered);
-        if (isRegistered) {
-            //use sign in
-            await signInWithEmailAndPassword(email, password);
-        } else {
-            //this is a sign up
-            await createUserWithEmailAndPassword(email, password);
-        }
+            // Try signing in with a dummy password to check if user exists
+            await signInWithEmailAndPassword( email, password);
+
     }
 
     async function sign_in_google() {

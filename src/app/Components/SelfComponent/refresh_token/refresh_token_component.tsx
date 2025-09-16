@@ -22,12 +22,16 @@ export default function refresh_token_component({
             router.push('/login');
             return
         }
-        refresh_token().then(result => setTokenGenerated(result));
-        if( user ){
-            //if current path is / then redirect to chat page
-            router.push('/chat')
-            return
-        }
+        refresh_token().then(result => {
+            setTokenGenerated(result)
+            if( user ){
+
+                //if current path is / then redirect to chat page
+                router.push('/chat')
+                return
+            }
+
+        });
         const refresh_interval = setInterval(() => {
             refresh_token().then(result => {
                 if(!result) {

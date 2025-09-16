@@ -6,18 +6,34 @@ import { auth } from '@/Firebase/config';
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 
+
+async function clearCookies(){
+    const result = await fetch('api/logout',{method: 'PATCH'})
+    return result.json()
+}
+
 export default function (){
     const [signOut, Loading , error] = useSignOut(auth)
     const router = useRouter();
 
     async function logOut(){
         const success = await signOut();
-        if(success){
-            toast.success("Log out successfully");
-            router.push('/');
-            return;
+        try{
+            if(success){
+                toast.success("Log out successfully");
+                await clearCookies();
+                router.push('/');
+                return;
+            }
+            else{
+                throw new Error('log out error');
+            }
+
         }
-        toast.error("Log out failed");
+        catch(err){
+            toast.error("Log out failed");
+
+        }
     }
 
     return(

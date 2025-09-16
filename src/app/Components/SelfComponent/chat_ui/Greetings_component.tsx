@@ -27,7 +27,7 @@ export default function(){
                 <SidebarTrigger size={'lg'} className={''}/>
 
             </nav>
-            <div className={'w-full h-[calc(100%-40px)] flex flex-col items-center gap-4 px-6 justify-center text-white'}>
+            <div className={'w-full h-[calc(100dvh-40px)] overflow-hidden  flex flex-col items-center gap-4 px-6 justify-center text-white'}>
                 <p className={'font-bold text-xl text-center'}>Start Chatting with Me, Your Personalized chatbot</p>
                 <Button onClick={createNewChat} className={'bg-neutral-800 hover:bg-neutral-700 text-white'}>Start New Chat</Button>
             </div>

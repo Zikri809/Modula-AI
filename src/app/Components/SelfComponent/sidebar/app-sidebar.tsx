@@ -23,13 +23,13 @@ const sideBarMenuSkeleton = [
     <SidebarMenuSkeleton key={6}/>,
     <SidebarMenuSkeleton key={7}/>,
 ]
-
+import { auth } from '@/Firebase/config';
 export function AppSidebar(
     {children, chat_id}:{children:React.ReactNode, chat_id:string}
 ) {
     const router = useRouter();
     const {data:chat_data, isError, isLoading} = useQuery({
-        queryKey: ['sidebar',chat_id],
+        queryKey: ['sidebar',auth.currentUser?.uid],
         queryFn : async () =>{
             const data = await fetch(`api/chat/read`,{
                 method: "POST",

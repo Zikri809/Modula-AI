@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 error: 'invalid token possibly expired ',
-                path: '/api/user/create/route.ts',
+                path: 'api/user/create/route.ts',
             },
             { status: 400 }
         );
