@@ -51,16 +51,10 @@ export default function Reset_card({router}: props) {
             toast.error('Please enter your email ');
             return;
         }
-        if (!(await checkEmailRegistered(email))) {
-            //email not registered
-            toast.error(
-                'It seems that your email is not registered with us, try registering with this email'
-            );
-            return;
-        }
+
 
         await sendPasswordResetEmail(email);
-        toast.success('Success! Email had been sent to ' + email);
+        toast.success('Success! Email had been sent to ' + email +' If this email is registered you will received the email.');
         Set_timer_lock(true);
 
         const interval = setInterval(() => {
