@@ -163,7 +163,7 @@ export default function Chat(){
                 {!isLoading && !isError && chat_id ?(
                     <>
                         <Chat_navbar   navbar_title={navbar_title} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
-                        <div  className='p-4 w-full flex-1   max-w-250 flex flex-col gap-4 bg-black'>
+                        <div  className='px-4 w-full flex-1   max-w-250 flex flex-col gap-4 bg-black'>
                             {
                                 (message as Message[]).length > 0?(message?.map(({ message_id, role, message, created_at, file_meta_data, status}: Message, index) => {
                                     if (role === "user") {
