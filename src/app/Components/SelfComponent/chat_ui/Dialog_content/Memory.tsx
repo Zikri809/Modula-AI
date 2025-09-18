@@ -63,8 +63,8 @@ export default function ShowMemory({setDialogState}: {
                     user_details ? (
                         user_details.length > 0 ? user_details?.map((detail) => (
                             <div key={detail}
-                                 className={'border-b-2 border-b-neutral-500 flex flex-row items-center justify-between w-full'}>
-                                <p className={'line-clamp-1 w-full mr-3'}>{detail}</p>
+                                 className={'border-b-2 border-b-neutral-600 flex flex-row items-center justify-between w-full'}>
+                                <p className={'h-fit w-full mr-3'}>{detail}</p>
                                 <Button className={'bg-transparent'} disabled={processing_delete} onClick={() => {
                                     onDelete(detail)
                                 }}>

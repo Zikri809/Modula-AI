@@ -22,11 +22,28 @@ export default function Chat(){
     const [isSending, setIsSending] = useState<boolean>(false);
     const [user, loading, error] = useAuthState(auth);
     const [edit, setEdit] = useState<EditMessage>({isEditing: false});
+    const [navbar_title, setNavbarTitle] = useState("New Chat");
     const queryClient = useQueryClient();
-    
+
+
+
     //read chat_id from url then adjust accordingly
     const params = useSearchParams()
     const chat_id = params.get("chat_id")
+
+    useEffect(() => {
+        if(!chat_id) return;
+        const fetch_data = async()=>{
+            const fetch_data = await fetch(`api/chat/read?chat_id=${chat_id}`,{
+                method: 'POST'
+            });
+            const data = await fetch_data.json();
+            console.log(data);
+            setNavbarTitle(data.response[0].chat_title ?? "New Chat");
+        }
+        fetch_data()
+    }, [params]);
+
 
     const mutator = useMutation({
         mutationFn: async (message:SendMessage) => {
@@ -52,6 +69,7 @@ export default function Chat(){
         onSuccess: async (api_response) => {
             queryClient.setQueryData(['message',chat_id],(old_data: Message[])=>{
                     setIsSending(false)
+                    setNavbarTitle(api_response.meta_data.title)
                     return old_data.map((message_obj)=>(
                         message_obj.status == 'loading' ? (
                             {...message_obj, message: JSON.stringify(api_response.response), status: 'success' }
@@ -139,13 +157,13 @@ export default function Chat(){
     return (
         <AppSidebar chat_id={chat_id as string}>
 
-            <div className={`relative w-full min-h-screen pt-0 m-0  flex flex-col items-center justify-center`}>
+            <div className={`relative w-full min-h-screen pt-0 m-0  flex flex-col items-center justify-center `}>
                 <Toaster className={'z-100'}  position="top-right"/>
 
                 {!isLoading && !isError && chat_id ?(
                     <>
-                        <Chat_navbar  chat_id={chat_id} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
-                        <div  className='p-4 w-full min-h-[calc(100dvh-124px-60px)] h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
+                        <Chat_navbar key={message && message.length>=3? '1':'0'}  navbar_title={navbar_title} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
+                        <div  className='p-4 w-full flex-1 h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
                             {
                                 (message as Message[]).length > 0?(message?.map(({ message_id, role, message, created_at, file_meta_data, status}: Message, index) => {
                                     if (role === "user") {

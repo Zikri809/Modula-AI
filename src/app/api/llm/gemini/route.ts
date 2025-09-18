@@ -46,19 +46,21 @@ export async function POST(request: NextRequest) {
     await Verify_credit_upload(uid as string, files.length)
 
 
-    //file uploads block
-    const { uploaded_files, file_meta_data, ocr_response } = await gemini_ocr(
-        files,
-        uid as string
-    );
 
     //response block
     try {
+        //throw new Error('testing ui handler')
+        //file uploads block
+        const { uploaded_files, file_meta_data, ocr_response } = await gemini_ocr(
+            files,
+            uid as string
+        );
+
         const retrieved_uri: Part[] = await file_retrievial_gemini(
-            chat_id,
+            chat_id as string,
             'gemini-2.0-flash-001'
         );
-        const past_context = await prompt_builder(chat_id, uid as string);
+        const past_context = await prompt_builder(chat_id as string, uid as string);
         console.table(...[...uploaded_files, ...retrieved_uri]);
         const contentBlock: Part[] = [
             {
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
         ];
         console.log('generating content on gemini api')
         const response = await gemini.models.generateContent({
-            model: gemini_model,
+            model: gemini_model as string,
             contents: [{ role: 'user', parts: contentBlock }],
             config: {
                 tools: [ { googleSearch: {} }],
@@ -90,12 +92,12 @@ export async function POST(request: NextRequest) {
             memory_extraction,
             `<convo> user: ${query} || llm_response: ${cited_text ? cited_text : response.text} </convo>`,
             uid as string,
-            chat_id,
+            chat_id as string,
             response,
             query,
             file_meta_data,
             ocr_response,
-            llm_model
+            llm_model as string,
         );
 
         return NextResponse.json(

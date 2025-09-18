@@ -7,7 +7,7 @@ import {
     SidebarProvider,
 } from "@/components/ui/sidebar"
 import {useQuery} from "@tanstack/react-query";
-import {BrainCog, Loader, MessageCircleDashed, MessageCirclePlus, Settings} from "lucide-react";
+import {BrainCog, Loader, MessageCircleDashed, MessageCirclePlus, Settings, Trash} from "lucide-react";
 import {Chats} from "@/app/Types/chat_types/chat_types";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
@@ -28,7 +28,7 @@ export function AppSidebar(
     {children, chat_id}:{children:React.ReactNode, chat_id:string}
 ) {
     const router = useRouter();
-    const {data:chat_data, isError, isLoading} = useQuery({
+    const {data:chat_data, isError, isLoading,refetch} = useQuery({
         queryKey: ['sidebar',auth.currentUser?.uid],
         queryFn : async () =>{
             const data = await fetch(`api/chat/read`,{
@@ -47,6 +47,7 @@ export function AppSidebar(
                 method: "POST",
             })
             const json_result = await result.json();
+            refetch()
             router.replace(`/chat?chat_id=${json_result.chat_id}`);
         }
         catch(err){
@@ -56,6 +57,7 @@ export function AppSidebar(
 
     function accessChat(chat_id: string){
         try{
+            refetch()
             router.replace(`/chat?chat_id=${chat_id}`);
         }
         catch(err){
@@ -83,14 +85,17 @@ export function AppSidebar(
                             {
                                 !isLoading ? (
                                     ! isLoading && chat_data?.response.map((chat:Chats,index:number) => (
-                                        <SidebarMenuItem key={chat.chat_id} className={'flex flex-row text-white p-2'}>
-                                            <SidebarMenuButton onClick={()=>accessChat(chat.chat_id)} className={' text-md hover:bg-neutral-800 hover:text-white'}>
-                                                <MessageCircleDashed />
-                                                <p className={'line-clamp-1'}>{chat.chat_title ?? 'New Chat'}</p>
+                                        <SidebarMenuItem key={chat.chat_id} className={'w-full h-10 flex flex-row items-center justify-between text-white p-2'}>
+                                            <SidebarMenuButton  className={' text-md hover:bg-neutral-800 hover:text-white'}>
+                                                <div onClick={()=>accessChat(chat.chat_id)} className={'flex-1 flex flex-row gap-2 items-center '}>
+                                                    <MessageCircleDashed className={'shrink-0'}  size={16}/>
+                                                    <p className={'line-clamp-1'}>{chat.chat_title ?? 'New Chat'}</p>
+                                                </div>
+                                                <Trash className={'ml-4 text-neutral-400 hover:text-white'}/>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
                                     ))
-                                ):(isError ? 'Error Occurred Refresh the Page' :(<></>))
+                                ):(isError ? 'Error Occurred Refresh the Page' :(<p>No Previous Chat</p>))
                             }
 
                         </SidebarGroupContent>

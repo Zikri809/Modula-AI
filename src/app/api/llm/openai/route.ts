@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     await Verify_credit_upload(uid as string, files.length)
 
     try {
+        //throw  new Error('testing ui error handler')
         const { file_meta_data, ocr_response } = await gemini_ocr(
             files,
             uid as string
