@@ -157,13 +157,13 @@ export default function Chat(){
     return (
         <AppSidebar chat_id={chat_id as string}>
 
-            <div className={`relative w-full min-h-screen pt-0 m-0 ${message && message.length>0? '' : 'overflow-hidden'}  flex flex-col items-center justify-center `}>
+            <div className={`relative w-full min-h-screen pt-0 m-0 flex flex-col items-center justify-center `}>
                 <Toaster className={'z-100'}  position="top-right"/>
 
                 {!isLoading && !isError && chat_id ?(
                     <>
                         <Chat_navbar   navbar_title={navbar_title} className={'sticky top-0 z-10 py-4 w-full bg-neutral-900'}/>
-                        <div  className='p-4 w-full flex-1 h-fit overflow-hidden max-w-250 flex flex-col gap-4 bg-black'>
+                        <div  className='p-4 w-full flex-1   max-w-250 flex flex-col gap-4 bg-black'>
                             {
                                 (message as Message[]).length > 0?(message?.map(({ message_id, role, message, created_at, file_meta_data, status}: Message, index) => {
                                     if (role === "user") {
