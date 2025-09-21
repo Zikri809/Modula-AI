@@ -13,6 +13,7 @@ export async function DELETE(request: NextRequest) {
         );
 
     try {
+
         const response = await delete_message(message_id,chat_id);
         if (response)
             return NextResponse.json(

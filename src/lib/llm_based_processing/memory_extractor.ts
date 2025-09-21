@@ -9,7 +9,7 @@ const gemini = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 //this return needs to be processed by receipient
 export default async function (
-    past_context: { past_conv_arr: string[]; user_data?: string },
+    past_context: { past_conv_arr: string[]; user_data: string },
     query: string | null,
     response?: any
 ) {

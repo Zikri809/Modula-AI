@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
             files,
             uid as string
         );
-        const { past_conv_arr_openai, previous_convo_gemini } =
+        const { past_conv_arr_openai, previous_convo_gemini,user_details } =
             await context_builder(chat_id, uid as string);
         const { content_file_arr, lowest_confidence } = await openai_retrievial(
             chat_id,
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         } = request_data;
 
         const memory_extraction = await memory_extractor(
-            { past_conv_arr: previous_convo_gemini },
+            { past_conv_arr: previous_convo_gemini, user_data: user_details },
             query,
             { text: open_ai_responses.choices[0].message.content }
         );

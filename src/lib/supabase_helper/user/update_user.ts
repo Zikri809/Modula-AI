@@ -6,14 +6,14 @@ const update_schema = z.object({
     plan: z.enum(['free', 'paid']).optional(),
     email: z.string().email().optional(), // e.g. "free", "premium", etc.
     user_details: z.array(z.string()).optional(),
-    credit_remain: z.number().int().min(0).optional(), // Remaining tokens for the user, e.g. 5000
+    credit_remain: z.number().min(0).optional(), // Remaining tokens for the user, e.g. 5000
     free_upload: z.number().int().min(0).optional(),
 });
 
 export default async function update_user(
     uid: string,
     request_body: any,
-    user_details_operation?: string | null | 'add' | 'remove'
+    user_details_operation?:  string | null | 'add' | 'remove'
 ) {
     const supabase = await createClient();
     //construct update_field for postgres

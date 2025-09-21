@@ -5,6 +5,8 @@ import delete_from_storage from "@/Firebase/Utilities/delete_from_storage";
 export default async function edit_past(message_id: string, chat_id: string) {
     const supabase = await createClient()
     //get the files contain by messages
+    //prevent accidental edit during error triggering the delete all
+    if(message_id==null) return []
     const {data:message_object, error} = await supabase
         .from('messages')
         .select(

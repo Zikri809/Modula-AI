@@ -73,7 +73,7 @@ export default function Chat(){
                     return old_data.map((message_obj)=>(
                         message_obj.status == 'loading' ? (
                             {...message_obj, message: JSON.stringify(api_response.response), status: 'success' }
-                        ) : (message_obj.message_id ==-99 ? {...message_obj, message_id: api_response.message_id}  :message_obj)
+                        ) : (message_obj.message_id ==null ? {...message_obj, message_id: api_response.message_id}  :message_obj)
                     ))
         }
             )
@@ -102,7 +102,7 @@ export default function Chat(){
                 "role": "user",
                 "message": sendMessage?.prompt,
                 "created_at": new Date().toISOString(),
-                "message_id": -99,
+                "message_id": null,
                 "file_meta_data": sendMessage?.file.map((file_obj)=>({file_name: file_obj.name}))
             },
             {

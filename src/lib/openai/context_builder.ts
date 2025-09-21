@@ -31,9 +31,8 @@ export default async function (chat_id: string, uid: string) {
                         content: `<user_details>${user_data.user_details}</user_details> `,
                     },
                 ],
-                previous_convo_gemini: [
-                    `<user_details>${user_data.user_details}</user_details> `,
-                ],
+                previous_convo_gemini: [],
+                user_details: user_data.user_details
             };
         //the last one is the latest
         let sum_tokens = 0;
@@ -67,12 +66,11 @@ export default async function (chat_id: string, uid: string) {
                 );
             }
         }
-        previous_convo_gemini.push(
-            `<user_details>${user_data.user_details}</user_details> `
-        );
+
         return {
             past_conv_arr_openai: previous_convo_openai,
             previous_convo_gemini: previous_convo_gemini,
+            user_details: user_data.user_details
         };
     } catch (err) {
         throw err;
