@@ -6,6 +6,7 @@ import 'katex/dist/katex.min.css';
 import remarkMath from "remark-math";
 import Llm_waiting_animation from "@/app/Components/SelfComponent/chat_ui/Llm_waiting_animation";
 import {model_combo_box_list} from "@/app/Components/SelfComponent/chat_ui/llm_array";
+import {CopyIcon} from "lucide-react";
 
 
 
@@ -39,9 +40,17 @@ export default function response_chat_buble({llm_model, llm_response, time, stat
                             <td className="px-4 py-2 border" {...props} />
                         ),
                         pre: ({node, ...props}) => (
-                            <pre className='overflow-x-auto thin-scrollbar'>
-                              <code {...props}/>
-                          </pre>
+                            <div className={'!mr-0 rounded-md'}>
+                                <div className={'rounded-md p-4 !pb-0 bg-black right-4 top-4 w-full flex flex-row justify-between items-center'}>
+                                    <p className={'font-bold'}>Code</p>
+                                    <button className={'flex flex-row gap-2 items-center text-white font-bold '}><CopyIcon size={15}/> Copy</button>
+                                </div>
+                                <pre  className=' !mr-0 overflow-x-auto thin-scrollbar bg-black p-4 rounded-md'>
+                                  <code {...props}/>
+                                </pre>
+
+                            </div>
+
                         ),
                     }}
                 >{ state == 'error' ? 'Error Occurred try again in a few seconds !' : JSON.parse(llm_response)}</ReactMarkdown>}
