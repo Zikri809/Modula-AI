@@ -24,9 +24,11 @@ const sideBarMenuSkeleton = [
     <SidebarMenuSkeleton key={7}/>,
 ]
 import { auth } from '@/Firebase/config';
+import {useState} from "react";
 export function AppSidebar(
     {children, chat_id}:{children:React.ReactNode, chat_id:string}
 ) {
+    const [current_open , setCurrentOpen] = useState<string | null>(null)
     const router = useRouter();
     const {data:chat_data, isError, isLoading,refetch} = useQuery({
         queryKey: ['sidebar',auth.currentUser?.uid],
@@ -56,6 +58,7 @@ export function AppSidebar(
     }
 
     function accessChat(chat_id: string){
+        setCurrentOpen(chat_id)
         try{
             refetch()
             router.replace(`/chat?chat_id=${chat_id}`);
@@ -85,13 +88,13 @@ export function AppSidebar(
                             {
                                 !isLoading ? (
                                     ! isLoading && chat_data?.response.map((chat:Chats,index:number) => (
-                                        <SidebarMenuItem key={chat.chat_id} className={'w-full h-10 flex flex-row items-center justify-between text-white p-2'}>
-                                            <SidebarMenuButton  className={' text-md hover:bg-neutral-800 hover:text-white'}>
+                                        <SidebarMenuItem key={chat.chat_id} className={` rounded-md  cursor-pointer w-full h-10 flex flex-row items-center justify-between text-white p-2`}>
+                                            <SidebarMenuButton  className={`${current_open==chat.chat_id ? 'bg-neutral-700': 'bg-black'} cursor-pointer text-md hover:bg-neutral-600 hover:text-white`}>
                                                 <div onClick={()=>accessChat(chat.chat_id)} className={'flex-1 flex flex-row gap-2 items-center '}>
                                                     <MessageCircleDashed className={'shrink-0'}  size={16}/>
                                                     <p className={'line-clamp-1'}>{chat.chat_title ?? 'New Chat'}</p>
                                                 </div>
-                                                <Trash className={'ml-4 text-neutral-400 hover:text-white'}/>
+                                                <Trash className={'cursor-pointer ml-4 text-red-700 hover:text-white'}/>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
                                     ))
