@@ -6,7 +6,7 @@ import {
     SidebarMenuItem, SidebarMenuSkeleton,
     SidebarProvider,
 } from "@/components/ui/sidebar"
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {BrainCog, Loader, MessageCircleDashed, MessageCirclePlus, Settings, Trash} from "lucide-react";
 import {Chats} from "@/app/Types/chat_types/chat_types";
 import {toast} from "sonner";
@@ -25,42 +25,65 @@ const sideBarMenuSkeleton = [
 ]
 import { auth } from '@/Firebase/config';
 import {useState} from "react";
+type Create_chat = {
+    message: string,
+    chat_id: string,
+}
 export function AppSidebar(
     {children, chat_id}:{children:React.ReactNode, chat_id:string}
 ) {
     const [current_open , setCurrentOpen] = useState<string | null>(null)
     const router = useRouter();
+    const queryClient = useQueryClient();
     const {data:chat_data, isError, isLoading,refetch} = useQuery({
         queryKey: ['sidebar',auth.currentUser?.uid],
         queryFn : async () =>{
             const data = await fetch(`api/chat/read`,{
                 method: "POST",
             });
-            return await data.json();
+            const json_result = await data.json();
+            return json_result.response;
         },
         retry: 3,
         placeholderData: keepPreviousData
 
     });
 
-    async function createNewChat(){
-        try{
+    const mutator = useMutation({
+        mutationFn: async () =>{
             const result = await fetch(`api/chat/create`,{
                 method: "POST",
             })
             const json_result = await result.json();
-            refetch()
+            //refetch()
+            if(!result.ok){
+                toast.error("Failed to create chat");
+                throw new Error("Failed to create chat");
+                //code ends here if into this branch
+            }
+            setCurrentOpen(json_result.chat_id)
             router.replace(`/chat?chat_id=${json_result.chat_id}`);
+            return json_result
+        },
+        onSuccess: async (json_result: Create_chat) => {
+            console.log('mutator fired')
+            queryClient.setQueryData(['sidebar',auth.currentUser?.uid], (original_arr:Chats[])=>(
+                 [{chat_id:json_result.chat_id, chat_title: null},...original_arr]
+            ))
+            console.log('update data is ', chat_data)
         }
-        catch(err){
-            toast.error('Failed to create a chat. Try again !');
-        }
+
+    })
+
+    async function createNewChat(){
+        mutator.mutate()
     }
 
     function accessChat(chat_id: string){
         setCurrentOpen(chat_id)
         try{
-            refetch()
+            //motive for refresh here is to get latest title from the chat
+            //refetch()
             router.replace(`/chat?chat_id=${chat_id}`);
         }
         catch(err){
@@ -75,7 +98,7 @@ export function AppSidebar(
                 <SidebarHeader className={'border-none bg-black text-xl text-white font-bold p-4 flex flex-row items-center'}>
                     <BrainCog /> Modula AI
                 </SidebarHeader>
-                <SidebarContent className={'bg-black '} >
+                <SidebarContent className={'bg-black thin-scrollbar-y'} >
                     <SidebarMenuItem className={'flex flex-row text-white p-2'}>
                         <SidebarMenuButton onClick={createNewChat} className={' text-md hover:bg-neutral-800 hover:text-white'}>
                             <MessageCirclePlus />
@@ -87,7 +110,7 @@ export function AppSidebar(
                         <SidebarGroupContent key={Date.now()}>
                             {
                                 !isLoading ? (
-                                    ! isLoading && chat_data?.response.map((chat:Chats,index:number) => (
+                                    ! isLoading && chat_data?.map((chat:Chats,index:number) => (
                                         <SidebarMenuItem key={chat.chat_id} className={` rounded-md  cursor-pointer w-full h-10 flex flex-row items-center justify-between text-white p-2`}>
                                             <SidebarMenuButton  className={`${current_open==chat.chat_id ? 'bg-neutral-700': 'bg-black'} cursor-pointer text-md hover:bg-neutral-600 hover:text-white`}>
                                                 <div onClick={()=>accessChat(chat.chat_id)} className={'flex-1 flex flex-row gap-2 items-center '}>

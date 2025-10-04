@@ -6,6 +6,7 @@ import rehypeKatex from "rehype-katex";
 import ReactMarkdown from "react-markdown";
 import {File as FileIcon, PenLine, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
+import {formatDistanceToNow} from "date-fns";
 
 export default function user_chat_bubble({message_id, username,user_prompt,time, file_meta_data,SetEdit}:User_message_bubble) {
 
@@ -65,7 +66,7 @@ export default function user_chat_bubble({message_id, username,user_prompt,time,
             </div>
             <div className={'flex flex-row gap-2 w-full items-center text-neutral-400  justify-end'}>
                 { !(file_meta_data.length>0) ? <button className={'hover:text-neutral-100'} onClick={onEdit}>  <PenLine size={14} /></button>:<></>}
-                <p className='pr-1 sm:text-sm text-neutral-400 text-right'>{new Date(time).toLocaleTimeString()}</p>
+                <p className='pr-1 sm:text-sm text-neutral-400 text-right'>{formatDistanceToNow(new Date(time), { addSuffix: true }).replace(/^./, c => c.toUpperCase())}</p>
             </div>
         </div>
     )

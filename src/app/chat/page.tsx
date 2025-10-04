@@ -2,7 +2,7 @@
 import User_chat_bubble from "@/app/Components/SelfComponent/chat_ui/user_chat_bubble";
 import Response_chat_buble from "@/app/Components/SelfComponent/chat_ui/response_chat_buble";
 import {useEffect, useState} from "react";
-import {EditMessage, Message, SendMessage} from "@/app/Types/chat_types/chat_types";
+import {Chats, EditMessage, Message, SendMessage} from "@/app/Types/chat_types/chat_types";
 import {useMutation, useQuery} from '@tanstack/react-query'
 import Chat_input from "@/app/Components/SelfComponent/chat_ui/chat_input";
 import {useQueryClient} from "@tanstack/react-query";
@@ -70,6 +70,13 @@ export default function Chat(){
             queryClient.setQueryData(['message',chat_id],(old_data: Message[])=>{
                     setIsSending(false)
                     setNavbarTitle(api_response.meta_data.title)
+                    queryClient.setQueryData(['sidebar',auth.currentUser?.uid], (original_arr:Chats[])=> {
+                       return original_arr.map((element: Chats)=>(
+                           element.chat_id == chat_id ? (
+                               {...element, chat_title: api_response.meta_data.title}
+                           ): (element)
+                       ))
+                    })
                     return old_data.map((message_obj)=>(
                         message_obj.status == 'loading' ? (
                             {...message_obj, message: JSON.stringify(api_response.response), status: 'success' }

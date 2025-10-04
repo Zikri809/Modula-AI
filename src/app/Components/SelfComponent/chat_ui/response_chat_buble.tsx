@@ -11,6 +11,7 @@ import {toast} from "sonner";
 import 'prismjs/themes/prism-dark.css';
 import Prism from 'prismjs';
 import {useEffect} from "react";
+import {formatDistanceToNow} from "date-fns";
 
 /*
 * syntax highlightinh isnt feasible due to technical confilict using markdown renderer
@@ -85,7 +86,7 @@ export default function response_chat_buble({llm_model, llm_response, time, stat
                     }}
                 >{ state == 'error' ? 'Error Occurred try again in a few seconds !' : JSON.parse(llm_response)}</ReactMarkdown>}
             </div>
-            <p className='pr-1 text-sm text-neutral-400 text-left'>{new Date(time).toLocaleTimeString()}</p>
+            <p className='pr-1 text-sm text-neutral-400 text-left'>{formatDistanceToNow(new Date(time), { addSuffix: true }).replace(/^./, c => c.toUpperCase())}</p>
         </div>
     )
 }
