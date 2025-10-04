@@ -59,12 +59,14 @@ export default async function (
             : 0;
         //create new message
         const total_cost =
-            (ocr_response?.usageMetadata?.promptTokenCount ?? 0) +
+            //input cost gemini
+            ((ocr_response?.usageMetadata?.promptTokenCount ?? 0)/ 1000000)  +
             ((memory_response.usageMetadata?.promptTokenCount ?? 0) / 1000000) *
                 0.1 +
-            ((ocr_response?.usageMetadata?.candidatesTokenCount ?? 0) +
-                ((memory_response.usageMetadata?.candidatesTokenCount ?? 0) /
-                    1000000) *
+            //output cost gemini
+            (
+                ((ocr_response?.usageMetadata?.candidatesTokenCount ?? 0)/ 1000000) +
+                ((memory_response.usageMetadata?.candidatesTokenCount ?? 0) / 1000000) *
                     0.4) +
             open_ai_meta_data.total_cost;
 

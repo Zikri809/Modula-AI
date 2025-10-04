@@ -10,7 +10,7 @@ import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {BrainCog, Loader, MessageCircleDashed, MessageCirclePlus, Settings, Trash} from "lucide-react";
 import {Chats} from "@/app/Types/chat_types/chat_types";
 import {toast} from "sonner";
-import {useRouter} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import {keepPreviousData} from "@tanstack/query-core";
 import Profile_popover from "@/app/Components/SelfComponent/chat_ui/Profile_popover";
 
@@ -24,17 +24,33 @@ const sideBarMenuSkeleton = [
     <SidebarMenuSkeleton key={7}/>,
 ]
 import { auth } from '@/Firebase/config';
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 type Create_chat = {
     message: string,
     chat_id: string,
 }
 export function AppSidebar(
-    {children, chat_id}:{children:React.ReactNode, chat_id:string}
+    {children, chat_id,}:{children:React.ReactNode, chat_id:string}
 ) {
     const [current_open , setCurrentOpen] = useState<string | null>(null)
     const router = useRouter();
     const queryClient = useQueryClient();
+    const to_delete_chat = useRef<null | string>(null)
+
+    //highlight current opened based on the params
+    useEffect(() => {
+        setCurrentOpen(chat_id)
+    }, [chat_id]);
+
+
     const {data:chat_data, isError, isLoading,refetch} = useQuery({
         queryKey: ['sidebar',auth.currentUser?.uid],
         queryFn : async () =>{
@@ -48,6 +64,9 @@ export function AppSidebar(
         placeholderData: keepPreviousData
 
     });
+
+
+
 
     const mutator = useMutation({
         mutationFn: async () =>{
@@ -91,6 +110,30 @@ export function AppSidebar(
         }
     }
 
+    async function deleteChat(){
+        if(!to_delete_chat.current){
+            toast.error("Failed to delete chat. Try again !");
+            return;
+        }
+        const result = await fetch(`api/chat/delete?chat_id=${to_delete_chat.current}`,{
+            method: "DELETE",
+        })
+        if(!result.ok){
+            toast.error("Failed to delete chat. Try again !");
+            return
+        }
+
+        queryClient.setQueryData(['sidebar',auth.currentUser?.uid], (original_arr:Chats[])=> {
+            return original_arr.filter((object:Chats)=>object.chat_id != to_delete_chat.current)
+        })
+
+        //reset the variable
+        setCurrentOpen(null)
+        to_delete_chat.current=null;
+        router.replace(`/chat`)
+        toast.success("Chat Deleted successfully.");
+    }
+
     return (
         <SidebarProvider className={'bg-black'}>
 
@@ -108,21 +151,40 @@ export function AppSidebar(
                     <SidebarGroup>
                         <SidebarGroupLabel className={'text-white'}>Previous Chats</SidebarGroupLabel>
                         <SidebarGroupContent key={Date.now()}>
-                            {
-                                !isLoading ? (
-                                    ! isLoading && chat_data?.map((chat:Chats,index:number) => (
-                                        <SidebarMenuItem key={chat.chat_id} className={` rounded-md  cursor-pointer w-full h-10 flex flex-row items-center justify-between text-white p-2`}>
-                                            <SidebarMenuButton  className={`${current_open==chat.chat_id ? 'bg-neutral-700': 'bg-black'} cursor-pointer text-md hover:bg-neutral-600 hover:text-white`}>
-                                                <div onClick={()=>accessChat(chat.chat_id)} className={'flex-1 flex flex-row gap-2 items-center '}>
-                                                    <MessageCircleDashed className={'shrink-0'}  size={16}/>
-                                                    <p className={'line-clamp-1'}>{chat.chat_title ?? 'New Chat'}</p>
+                            <AlertDialog>
+                                {
+                                    !isLoading ? (
+                                        ! isLoading && chat_data?.map((chat:Chats,index:number) => (
+                                            <SidebarMenuItem key={chat.chat_id} className={` rounded-md  cursor-pointer w-full h-10 flex flex-row items-center justify-between text-white p-2`}>
+                                                <div  className={`${current_open==chat.chat_id ? 'bg-neutral-700': 'bg-black'} cursor-pointer text-md hover:bg-neutral-600 hover:text-white flex flex-row items-center w-full justify-between rounded-md p-2`}>
+                                                    <div onClick={()=>accessChat(chat.chat_id)} className={'flex-1 flex flex-row gap-2 items-center '}>
+                                                        <MessageCircleDashed className={'shrink-0'}  size={16}/>
+                                                        <p className={'line-clamp-1'}>{chat.chat_title ?? 'New Chat'}</p>
+                                                    </div>
+                                                    <AlertDialogTrigger onClick={()=>{to_delete_chat.current = chat.chat_id}}>
+                                                        <Trash size={15} className={'cursor-pointer ml-4 text-red-700 hover:text-white'}/>
+                                                    </AlertDialogTrigger>
                                                 </div>
-                                                <Trash className={'cursor-pointer ml-4 text-red-700 hover:text-white'}/>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))
-                                ):(isError ? 'Error Occurred Refresh the Page' :(<p>No Previous Chat</p>))
-                            }
+                                            </SidebarMenuItem>
+                                        ))
+                                    ):(isError ? 'Error Occurred Refresh the Page' :(<p>No Previous Chat</p>))
+                                }
+                                <AlertDialogContent className={'bg-black text-white border-none'}>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the chat from your account
+                                            and remove your data from our servers.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel className={'border-none bg-neutral-600 text-white'}>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={deleteChat} className={'bg-red-500'}>Continue</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+
+                            </AlertDialog>
+
 
                         </SidebarGroupContent>
                     </SidebarGroup>

@@ -35,7 +35,7 @@ export default function login() {
                 />
             </div>
             <p className="z-2 p-4 text-left text-2xl w-full font-bold text-white">Modula AI</p>
-            <div className=" z-2 px-6 h-full w-screen flex flex-col gap-2  justify-center ">
+            <div className=" z-2  h-full w-screen flex flex-col gap-2  justify-center ">
                 <LoginForm className="" />
             </div>
         </div>

@@ -24,6 +24,7 @@ export default function Chat(){
     const [edit, setEdit] = useState<EditMessage>({isEditing: false});
     const [navbar_title, setNavbarTitle] = useState("New Chat");
     const queryClient = useQueryClient();
+    const [newChatFunction_for_greeting, setNewChatFunction_for_greeting] = useState<any>(null);
 
 
 
@@ -60,9 +61,13 @@ export default function Chat(){
             })
             if(!result.ok){
                 if(result.status === 402){
-                    toast.error('You have exceeded the credit limit or file upload.');
+                    toast.error('You have exceeded the credit limit.');
+                    throw new Error( 'You have exceeded the credit limit. Please contact the admin! ' );
                 }
-                throw new Error( 'Error Occurred Please try again later by refreshing this page');
+                else{
+                    throw new Error( 'Error Occurred Please try again later.');
+
+                }
             }
             return result.json()
         },
@@ -184,14 +189,17 @@ export default function Chat(){
                                         return <Response_chat_buble key={index} llm_model={role} llm_response={message}
                                                                     time={created_at} state={status}/>
                                     }
-                                })): <p className={'my-auto font-bold text-lg text-neutral-300 px-4 text-center'}>Modula AI - multi LLM chatbot with memory of you as we engage !</p>}
+                                })): <p className={'my-auto font-bold text-lg text-neutral-100 px-4 text-center'}>
+                                    👋 Hey {user?.displayName? user.displayName : ''}! Ready to chat about anything on your mind?
+                                </p>
+                            }
                         </div>
                         <Chat_input className={'sticky px-4 w-full bg-neutral-900 rounded-t-2xl py-4 bottom-0 z-10'}
                                     isSending={isSending} sendToParent={SetSendMessage}
                                     editObject={edit}
                                     SetEditing={setEdit}
                         />
-                    </>):(!isLoading && !chat_id? <Greetings_component/>:<Loader size={32} className={'animate-spin text-white'}/>)}
+                    </>):(!isLoading && !chat_id? <Greetings_component />:<Loader size={32} className={'animate-spin text-white'}/>)}
             </div>
         </AppSidebar>
     )

@@ -158,7 +158,7 @@ export default function chat_input({isSending, sendToParent, className,editObjec
 
             <div className="flex-row flex items-end justify-center bg-neutral-800 rounded-3xl gap-2 w-full">
                 <input accept={'.png,.jpg,.jpeg,.pdf,.txt,.json,.md'} onChange={fileInputOnChange} type='file' multiple ref={file_input_ref} className={'hidden'}/>
-                <Button onClick={uploadFile} className={'h-10 w-10 hover:bg-neutral-700 bg-neutral-800 rounded-full'}>
+                <Button disabled={true} onClick={uploadFile} className={'h-10 w-10 hover:bg-neutral-700 bg-neutral-800 rounded-full'}>
                     <Paperclip  />
                 </Button>
                 <Textarea
@@ -205,7 +205,7 @@ export default function chat_input({isSending, sendToParent, className,editObjec
                                                     className={`text-xs flx flex-row items-center justify-between sm:text-base p-2 text-center text-white w-full bg-neutral-800 `}
 
                                                 >
-                                                    <div className={'flex flex-row items-center gap-2'}>
+                                                    <div className={`flex flex-row items-center gap-2 `}>
                                                         {item.icon} {item.label}
                                                     </div>
                                                     <CheckIcon

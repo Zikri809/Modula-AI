@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
     const query = formData.get('query') as string | null;
     let confidence_level: number | null = null;
 
-    await Verify_credit_upload(uid as string, files.length)
+    const is_credit_enough = await Verify_credit_upload(uid as string, files.length)
+    if(!is_credit_enough) return NextResponse.json({exceeded: true , message: 'No credit remain for your account.'},{status:402})
 
     try {
         //throw  new Error('testing ui error handler')

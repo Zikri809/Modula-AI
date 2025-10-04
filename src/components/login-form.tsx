@@ -82,7 +82,7 @@ export function LoginForm({
 
     useEffect(() => {
         const handler = async () => {
-
+            //toast.loading('Loading...');
             if (google_error) {
                 if (
                     google_error.code ==
@@ -137,7 +137,7 @@ export function LoginForm({
 
     useEffect(() => {
         const handler = async () => {
-
+            //toast.loading('Loading...');
             if (signIn_user) {
                 await create_user();
                 toast.success('Sign in Successful redirecting ...');
@@ -163,17 +163,19 @@ export function LoginForm({
 
     async function login() {
             // Try signing in with a dummy password to check if user exists
-            await signInWithEmailAndPassword( email, password);
+        toast.loading('Loading...');
+        await signInWithEmailAndPassword( email, password);
 
     }
 
     async function sign_in_google() {
+        toast.loading('Loading...');
         await signInWithGoogle();
     }
 
     return (
-        <div className={cn('flex flex-col gap-6 ', className)} {...props}>
-            <Card className="bg-black text-white border-neutral-600">
+        <div className={cn('w-full  ', className)} {...props}>
+            <Card className="mx-auto shrink-0 bg-black text-white max-w-100 border-neutral-600">
                 <CardHeader>
                     <CardTitle>Login / Sign Up to your account</CardTitle>
                     <CardDescription className="text-neutral-400">

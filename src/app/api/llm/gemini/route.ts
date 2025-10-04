@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll('file') as File[];
     const query = formData.get('query') as string | null;
 
-    await Verify_credit_upload(uid as string, files.length)
-
+    const is_credit_enough = await Verify_credit_upload(uid as string, files.length)
+    if(!is_credit_enough) return NextResponse.json({exceeded: true , message: 'No credit remain for your account.'},{status:402})
 
 
     //response block
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             'gemini-2.0-flash-001'
         );
         const past_context = await prompt_builder(chat_id as string, uid as string);
-        console.table(...[...uploaded_files, ...retrieved_uri]);
+        //console.table(...[...uploaded_files, ...retrieved_uri]);
         const contentBlock: Part[] = [
             {
                 text: `<Past_convo>${past_context.past_conv_arr.join(' ')}</Past_convo> <user_details>${past_context.user_data}</user_details></user_details> <user_query> ${query ?? ''} </user_query>`,
@@ -164,11 +164,13 @@ async function db_updates(
             : 0;
         //create new message
         const total_cost =
+            //input cost
             (((ocr_response?.usageMetadata?.promptTokenCount ?? 0) +
                 (response.usageMetadata?.promptTokenCount ?? 0) +
                 (memory_response.usageMetadata?.promptTokenCount ?? 0)) /
                 1000000) *
                 0.1 +
+            //output cost
             (((ocr_response?.usageMetadata?.candidatesTokenCount ?? 0) +
                 (response.usageMetadata?.candidatesTokenCount ?? 0) +
                 (memory_response.usageMetadata?.candidatesTokenCount ?? 0)) /

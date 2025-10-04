@@ -4,21 +4,44 @@ import {SidebarTrigger} from "@/components/ui/sidebar";
 import {Separator} from "@/components/ui/separator";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {auth} from "@/Firebase/config";
+import {Chats} from "@/app/Types/chat_types/chat_types";
 
-
-export default function(){
+type Create_chat = {
+    message: string,
+    chat_id: string,
+}
+export default function() {
     const router = useRouter();
-    async function createNewChat(){
-        try{
+    const queryClient = useQueryClient();
+
+    const mutator = useMutation({
+        mutationFn: async () =>{
             const result = await fetch(`api/chat/create`,{
                 method: "POST",
             })
             const json_result = await result.json();
+            //refetch()
+            if(!result.ok){
+                toast.error("Failed to create chat");
+                throw new Error("Failed to create chat");
+                //code ends here if into this branch
+            }
             router.replace(`/chat?chat_id=${json_result.chat_id}`);
+            return json_result
+        },
+        onSuccess: async (json_result: Create_chat) => {
+            //console.log('mutator fired')
+            queryClient.setQueryData(['sidebar',auth.currentUser?.uid], (original_arr:Chats[])=>(
+                [{chat_id:json_result.chat_id, chat_title: null},...original_arr]
+            ))
         }
-        catch(err){
-            toast.error('Failed to create a chat. Try again !');
-        }
+
+    })
+
+    async function createNewChat(){
+        mutator.mutate()
     }
 
     return (
